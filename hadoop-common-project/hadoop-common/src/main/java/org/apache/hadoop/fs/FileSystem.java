@@ -193,6 +193,7 @@ public abstract class FileSystem extends Configured
   private Cache.Key key;
 
   /** Recording statistics per a FileSystem class. */
+  //记录每个文件系统的统计信息
   private static final Map<Class<? extends FileSystem>, Statistics>
       statisticsTable = new IdentityHashMap<>();
 
@@ -204,6 +205,7 @@ public abstract class FileSystem extends Configured
   /**
    * A cache of files that should be deleted when the FileSystem is closed
    * or the JVM is exited.
+   * 关闭文件系统或退出JVM时应删除的文件缓存。
    */
   private final Set<Path> deleteOnExit = new TreeSet<>();
 
@@ -215,6 +217,7 @@ public abstract class FileSystem extends Configured
   boolean resolveSymlinks;
 
   /**
+   * 添加一个FileSystem实例到缓存中为了后续能够检索它
    * This method adds a FileSystem instance to the cache so that it can
    * be retrieved later. It is only for testing.
    * @param uri the uri to store it under
@@ -240,6 +243,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 得到一个FileSystem实例基于uri，传入的配置和用户。
    * Get a FileSystem instance based on the uri, the passed in
    * configuration and the user.
    * @param uri of the filesystem
@@ -265,6 +269,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 得到一个被配置的FileSystem
    * Returns the configured FileSystem implementation.
    * @param conf the configuration to use
    */
@@ -278,6 +283,7 @@ public abstract class FileSystem extends Configured
    * @return the uri of the default filesystem
    */
   public static URI getDefaultUri(Configuration conf) {
+    //从core-site.xml中获取，没有默认为file://
     URI uri = URI.create(fixName(conf.get(FS_DEFAULT_NAME_KEY, DEFAULT_FS)));
     if (uri.getScheme() == null) {
       throw new IllegalArgumentException("No scheme in default FS: " + uri);
@@ -469,6 +475,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 得到一个本地文件系统的运行实例
    * Get the local FileSystem.
    * @param conf the configuration to configure the FileSystem with
    * if it is newly instantiated.
@@ -481,9 +488,11 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 得到一个FileSystem根据URI的scheme和权限
    * Get a FileSystem for this URI's scheme and authority.
    * <ol>
    * <li>
+   *     如果configuration有属性fs.$SCHEME.impl.disable.cache设置为true，一个新的instance将被创建，初始化提供URL和配置，然后返回没有被缓存
    *   If the configuration has the property
    *   {@code "fs.$SCHEME.impl.disable.cache"} set to true,
    *   a new instance will be created, initialized with the supplied URI and
@@ -501,26 +510,36 @@ public abstract class FileSystem extends Configured
    * @throws IOException if the FileSystem cannot be instantiated.
    */
   public static FileSystem get(URI uri, Configuration conf) throws IOException {
+    //得到scheme组件
     String scheme = uri.getScheme();
+    //得到authority组件
     String authority = uri.getAuthority();
 
+    //如果都为null
     if (scheme == null && authority == null) {     // use default FS
+      //走core-size.xml中的fsuri配置或者file：//
       return get(conf);
     }
-
+    //如果不需要认证
     if (scheme != null && authority == null) {     // no authority
+      //得到默认uri
       URI defaultUri = getDefaultUri(conf);
+      //如果默认uri与uri的scheme并且默认uri的Authority不为null
       if (scheme.equals(defaultUri.getScheme())    // if scheme matches default
           && defaultUri.getAuthority() != null) {  // & default has authority
+        //返回默认
         return get(defaultUri, conf);              // return default
       }
     }
+    //否则得到开启缓存的名称
     String disableCacheName = String.format("fs.%s.impl.disable.cache", scheme);
+    //得到是否缓存是否开启，默认为false
     if (conf.getBoolean(disableCacheName, false)) {
       LOGGER.debug("Bypassing cache to create filesystem {}", uri);
+      //创建FileSystem
       return createFileSystem(uri, conf);
     }
-
+    //从缓存中拿
     return CACHE.get(uri, conf);
   }
 
@@ -676,7 +695,9 @@ public abstract class FileSystem extends Configured
 
   /**
    * Create a file with the provided permission.
+   * 创建具有提供的权限的文件。
    *
+   * 文件的权限设置为提供的权限，如* setPermission而非权限{@literal＆〜} umask
    * The permission of the file is set to be the provided permission as in
    * setPermission, not permission{@literal &~}umask
    *
@@ -928,6 +949,7 @@ public abstract class FileSystem extends Configured
    }
 
   /**
+   * 打开一个FSDataInputStream在指明的path
    * Opens an FSDataInputStream at the indicated Path.
    * @param f the file name to open
    * @param bufferSize the size of the buffer to be used.
@@ -942,6 +964,7 @@ public abstract class FileSystem extends Configured
    * @throws IOException IO failure
    */
   public FSDataInputStream open(Path f) throws IOException {
+    //使用core-default.xml中的`io.file.buffer.size`默认缓存区大小，默认为4096B
     return open(f, getConf().getInt(IO_FILE_BUFFER_SIZE_KEY,
         IO_FILE_BUFFER_SIZE_DEFAULT));
   }
@@ -1012,6 +1035,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 创建一个FSDataOutputStream在指定路径下，默认是可覆盖的
    * Create an FSDataOutputStream at the indicated Path.
    * Files are overwritten by default.
    * @param f the file to create
@@ -1131,9 +1155,9 @@ public abstract class FileSystem extends Configured
    * Create an FSDataOutputStream at the indicated Path.
    * @param f the file name to open
    * @param overwrite if a file with this name already exists, then if true,
-   *   the file will be overwritten, and if false an error will be thrown.
-   * @param bufferSize the size of the buffer to be used.
-   * @param replication required block replication for the file.
+   *   the file will be overwritten, and if false an error will be thrown. 是否覆盖写入
+   * @param bufferSize the size of the buffer to be used. 缓存去大小
+   * @param replication required block replication for the file. 副本个数
    * @throws IOException IO failure
    */
   public FSDataOutputStream create(Path f,
@@ -1176,7 +1200,7 @@ public abstract class FileSystem extends Configured
    * @param bufferSize the size of the buffer to be used.
    * @param replication required block replication for the file.
    * @param blockSize block size
-   * @param progress the progress reporter
+   * @param progress the progress reporter 回调接口用于同志datanode的进度给app
    * @throws IOException IO failure
    * @see #setPermission(Path, FsPermission)
    */
@@ -1412,6 +1436,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 增加数据到已经存在的文件中
    * Append to an existing file (optional operation).
    * Same as
    * {@code append(f, getConf().getInt(IO_FILE_BUFFER_SIZE_KEY,
@@ -3395,8 +3420,9 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 创建一个初始化新的FileSystem实例
    * Create and initialize a new instance of a FileSystem.
-   * @param uri URI containing the FS schema and FS details
+   * @param uri URI containing the FS schema and FS details FS schema and FS details
    * @param conf configuration to use to look for the FS instance declaration
    * and to pass to the {@link FileSystem#initialize(URI, Configuration)}.
    * @return the initialized filesystem.
@@ -3404,13 +3430,16 @@ public abstract class FileSystem extends Configured
    */
   private static FileSystem createFileSystem(URI uri, Configuration conf)
       throws IOException {
+    //从Tracer上下文中拿到Tracer
     Tracer tracer = FsTracer.get(conf);
     try(TraceScope scope = tracer.newScope("FileSystem#createFileSystem")) {
       scope.addKVAnnotation("scheme", uri.getScheme());
       Class<? extends FileSystem> clazz =
           getFileSystemClass(uri.getScheme(), conf);
+      //反射拿到对应的FileSystem
       FileSystem fs = ReflectionUtils.newInstance(clazz, conf);
       try {
+        //调用初始化方法
         fs.initialize(uri, conf);
       } catch (IOException | RuntimeException e) {
         // exception raised during initialization.
@@ -4266,6 +4295,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 得到一个统计信息通过特定的文件系统
    * Get the statistics for a particular file system.
    * @param cls the class to lookup
    * @return a statistics object
@@ -4276,9 +4306,12 @@ public abstract class FileSystem extends Configured
       Class<? extends FileSystem> cls) {
     checkArgument(scheme != null,
         "No statistics is allowed for a file system with null scheme!");
+    //map缓存拿
     Statistics result = statisticsTable.get(cls);
     if (result == null) {
+      //new
       final Statistics newStats = new Statistics(scheme);
+      //put map
       statisticsTable.put(cls, newStats);
       result = newStats;
       GlobalStorageStatistics.INSTANCE.put(scheme,

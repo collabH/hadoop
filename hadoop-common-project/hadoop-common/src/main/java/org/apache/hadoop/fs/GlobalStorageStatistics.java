@@ -28,11 +28,13 @@ import org.apache.hadoop.classification.InterfaceAudience;
 
 /**
  * Stores global storage statistics objects.
+ * 保存全局存储统计对象
  */
 @InterfaceAudience.Public
 public enum GlobalStorageStatistics {
   /**
    * The GlobalStorageStatistics singleton.
+   * 单例模式
    */
   INSTANCE;
 

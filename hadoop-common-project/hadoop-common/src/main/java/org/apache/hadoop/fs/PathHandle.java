@@ -27,6 +27,8 @@ import org.apache.hadoop.classification.InterfaceStability;
  * Opaque, serializable reference to an entity in the FileSystem. May contain
  * metadata sufficient to resolve or verify subsequent accesses independent of
  * other modifications to the FileSystem.
+ *
+ * 对FileSystem中实体的不透明，可序列化引用。可能包含足以解决或验证后续访问的元数据，而与对文件系统的其他修改无关。
  */
 @InterfaceAudience.Public
 @InterfaceStability.Evolving

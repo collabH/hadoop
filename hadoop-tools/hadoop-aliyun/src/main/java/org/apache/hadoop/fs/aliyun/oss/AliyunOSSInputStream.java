@@ -80,7 +80,7 @@ public class AliyunOSSInputStream extends FSInputStream {
   /**
    * Reopen the wrapped stream at give position, by seeking for
    * data of a part length from object content stream.
-   *
+   * 通过从对象内容流中查找部分长度的数据，在给定位置重新打开包装的流。
    * @param pos position from start of a file
    * @throws IOException if failed to reopen
    */
@@ -290,9 +290,12 @@ public class AliyunOSSInputStream extends FSInputStream {
   @Override
   public synchronized void seek(long pos) throws IOException {
     checkNotClosed();
+    //是否以及读取
     if (position == pos) {
       return;
+      //大于上次读取位置并且小于全部数据pos
     } else if (pos > position && pos < position + partRemaining) {
+      //读取长度
       long len = pos - position;
       position = pos;
       partRemaining -= len;

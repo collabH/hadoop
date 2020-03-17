@@ -272,6 +272,7 @@ public class DataNode extends ReconfigurableBase
   public static final Logger LOG = LoggerFactory.getLogger(DataNode.class);
   
   static{
+    //初始化hdfs配置
     HdfsConfiguration.init();
   }
 

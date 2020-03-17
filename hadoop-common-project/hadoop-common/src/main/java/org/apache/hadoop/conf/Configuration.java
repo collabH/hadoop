@@ -231,17 +231,24 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
           "org.apache.hadoop.conf.Configuration.deprecation");
   private static final Set<String> TAGS = ConcurrentHashMap.newKeySet();
 
+  //加载配置的模式，“加载解析配置文件的过程中，不输出日志信息。” 开关变量
   private boolean quietmode = true;
 
   private static final String DEFAULT_STRING_CHECK =
     "testingforemptydefaultvalue";
 
+
+  //是否默认限制的系统变量，默认为false
   private static boolean restrictSystemPropsDefault = false;
+  //限制系统变量
   private boolean restrictSystemProps = restrictSystemPropsDefault;
+  //是否运行null值属性
   private boolean allowNullValueProperties = false;
 
   private static class Resource {
+    //资源
     private final Object resource;
+    //名称
     private final String name;
     private final boolean restrictParser;
     
@@ -311,11 +318,13 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
    */
   private Set<String> finalParameters = Collections.newSetFromMap(
       new ConcurrentHashMap<String, Boolean>());
-  
-  private boolean loadDefaults = true;
+
+  //是否加载默认配置
+  private boolean loadDefaults;
 
   /**
    * Configuration objects
+   * 存在重复Configuration问题
    */
   private static final WeakHashMap<Configuration,Object> REGISTRY = 
     new WeakHashMap<Configuration,Object>();
@@ -327,6 +336,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       new ConcurrentHashMap<>();
 
   /**
+   * 默认
    * List of default Resources. Resources are loaded in the order of the list 
    * entries
    */
@@ -3004,21 +3014,27 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     }
     this.addTags(properties);
   }
-  
+
+  //加载配置文件，并且转换为对应的Resource对象
   private Resource loadResource(Properties properties,
                                 Resource wrapper, boolean quiet) {
+    //配置默认名称
     String name = UNKNOWN_RESOURCE;
     try {
+      //得到resource对象
       Object resource = wrapper.getResource();
       name = wrapper.getName();
+      //是否返回缓存配置
       boolean returnCachedProperties = false;
 
       if (resource instanceof InputStream) {
+        //如果为流设置为true
         returnCachedProperties = true;
+        //属性覆盖 增加
       } else if (resource instanceof Properties) {
         overlay(properties, (Properties)resource);
       }
-
+      //得到xml解析器
       XMLStreamReader2 reader = getStreamReader(wrapper, quiet);
       if (reader == null) {
         if (quiet) {
@@ -3054,7 +3070,9 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
 
   private XMLStreamReader2 getStreamReader(Resource wrapper, boolean quiet)
       throws XMLStreamException, IOException {
+    //拿到配置资源
     Object resource = wrapper.getResource();
+    //是否限制解析
     boolean isRestricted = wrapper.isParserRestricted();
     XMLStreamReader2 reader = null;
     if (resource instanceof URL) {                  // an URL resource
@@ -3433,6 +3451,11 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     }
   }
 
+  /**
+   * 属性覆盖以及增加
+   * @param to
+   * @param from
+   */
   private void overlay(Properties to, Properties from) {
     synchronized (from) {
       for (Entry<Object, Object> entry : from.entrySet()) {

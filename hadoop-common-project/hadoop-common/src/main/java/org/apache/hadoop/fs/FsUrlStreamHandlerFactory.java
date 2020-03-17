@@ -31,10 +31,11 @@ import org.apache.hadoop.conf.Configuration;
 
 /**
  * Factory for URL stream handlers.
- * 
+ * 为了处理UrR流
  * There is only one handler whose job is to create UrlConnections. A
  * FsUrlConnection relies on FileSystem to choose the appropriate FS
  * implementation.
+ * 只有一个处理程序的工作是创建UrlConnections。 FsUrlConnection依靠FileSystem选择适当的FS实现。
  * 
  * Before returning our handler, we make sure that FileSystem knows an
  * implementation for the requested scheme/protocol.
@@ -84,6 +85,11 @@ public class FsUrlStreamHandlerFactory implements
     }
   }
 
+  /**
+   * 创建URL流处理器
+   * @param protocol
+   * @return
+   */
   @Override
   public java.net.URLStreamHandler createURLStreamHandler(String protocol) {
     LOG.debug("Creating handler for protocol {}", protocol);

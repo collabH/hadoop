@@ -24,6 +24,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 
 /**
  *  Stream that permits seeking.
+ *  允许搜索流
  */
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
@@ -32,11 +33,15 @@ public interface Seekable {
    * Seek to the given offset from the start of the file.
    * The next read() will be from that location.  Can't
    * seek past the end of the file.
+   * 从文件开始处寻找给定的偏移量。 下一个read（）将来自该位置。无法越过文件末尾。
+   *
+   * 高开销
    */
   void seek(long pos) throws IOException;
   
   /**
    * Return the current offset from the start of the file
+   * 返回文件开头的当前偏移量
    */
   long getPos() throws IOException;
 

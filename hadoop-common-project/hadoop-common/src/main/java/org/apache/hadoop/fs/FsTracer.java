@@ -26,7 +26,7 @@ import org.apache.htrace.core.Tracer;
 
 /**
  * Holds the HTrace Tracer used for FileSystem operations.
- *
+ *  保存HTrace的Tracer在FileSystem操作
  * Ideally, this would be owned by the DFSClient, rather than global.  However,
  * the FileContext API may create a new DFSClient for each operation in some
  * cases.  Because of this, we cannot store this Tracer inside DFSClient.  See

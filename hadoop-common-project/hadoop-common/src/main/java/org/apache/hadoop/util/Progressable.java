@@ -23,7 +23,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 
 /**
  * A facility for reporting progress.
- * 
+ * 报告进度的工具。
  * <p>Clients and/or applications can use the provided <code>Progressable</code>
  * to explicitly report progress to the Hadoop framework. This is especially
  * important for operations which take significant amount of time since,

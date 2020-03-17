@@ -34,6 +34,9 @@ import org.apache.hadoop.util.IdentityHashStore;
 
 /** Utility that wraps a {@link FSInputStream} in a {@link DataInputStream}
  * and buffers input through a {@link java.io.BufferedInputStream}. */
+//该实用程序将{@link FSInputStream}包装在{@link DataInputStream} 中，
+// 并通过{@link java.io.BufferedInputStream}缓冲输入。
+  //支持随机访问，可以从流的任意位置读取数据
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 public class FSDataInputStream extends DataInputStream

@@ -34,6 +34,7 @@ import org.apache.hadoop.conf.Configuration;
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 public class LocalFileSystem extends ChecksumFileSystem {
+  //本地文件系统URL前缀
   static final URI NAME = URI.create("file:///");
   static private Random rand = new Random();
   

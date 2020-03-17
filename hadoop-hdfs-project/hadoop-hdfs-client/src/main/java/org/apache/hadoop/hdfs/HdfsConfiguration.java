@@ -33,6 +33,7 @@ public class HdfsConfiguration extends Configuration {
   static {
     addDeprecatedKeys();
 
+    //加载默认配置
     // adds the default resources
     Configuration.addDefaultResource("hdfs-default.xml");
     Configuration.addDefaultResource("hdfs-rbf-default.xml");
