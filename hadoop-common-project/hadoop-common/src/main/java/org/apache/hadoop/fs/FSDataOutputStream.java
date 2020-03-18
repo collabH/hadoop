@@ -26,6 +26,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
 /** Utility that wraps a {@link OutputStream} in a {@link DataOutputStream}.
+ * FSDataOutputStream不允许对一个已打开的文件随机写入以及随机搜索，因为HDFS只运行对一个已打开的文件顺序写入，或者在文件尾部追加数据。
  */
 @InterfaceAudience.Public
 @InterfaceStability.Stable
@@ -45,9 +46,12 @@ public class FSDataOutputStream extends DataOutputStream
 
     @Override
     public void write(int b) throws IOException {
+      //通过OutputStream写入
       out.write(b);
+      //pos增加
       position++;
       if (statistics != null) {
+        //增加字节写长度统计
         statistics.incrementBytesWritten(1);
       }
     }

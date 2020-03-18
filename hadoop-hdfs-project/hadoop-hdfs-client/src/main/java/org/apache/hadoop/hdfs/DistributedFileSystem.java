@@ -1150,7 +1150,9 @@ public class DistributedFileSystem extends FileSystem
    */
   @Override
   public FileStatus[] listStatus(Path p) throws IOException {
+    //得到绝对路径
     Path absF = fixRelativePart(p);
+    //创建FileStatus数组
     return new FileSystemLinkResolver<FileStatus[]>() {
       @Override
       public FileStatus[] doCall(final Path p) throws IOException {

@@ -278,6 +278,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 得到一个默认的FileSystem URI通过配置
    * Get the default FileSystem URI from a configuration.
    * @param conf the configuration to use
    * @return the uri of the default filesystem
@@ -310,9 +311,10 @@ public abstract class FileSystem extends Configured
 
   /**
    * Initialize a FileSystem.
-   *
+   * 初始化FileSystem
    * Called after the new FileSystem instance is constructed, and before it
    * is ready for use.
+   * 调用后新的FileSystem实例被构建，之前它已经用于使用
    *
    * FileSystem implementations overriding this method MUST forward it to
    * their superclass, though the order in which it is done, and whether
@@ -722,6 +724,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 创建一个目录根据提供的权限，目录的权限设置根据提供的setPermission设置，无权限设置为umask
    * Create a directory with the provided permission.
    * The permission of the directory is set to be the provided permission as in
    * setPermission, not permission{@literal &~}umask
@@ -1667,6 +1670,7 @@ public abstract class FileSystem extends Configured
   public abstract boolean delete(Path f, boolean recursive) throws IOException;
 
   /**
+   * 标注一个路径将被删除当它们的FileSystem关闭的时候，当JVM关闭的时候情况，全部缓存在FileSystem对象将回动态的关闭。这些标示路径将会被删除作为一个结果集
    * Mark a path to be deleted when its FileSystem is closed.
    * When the JVM shuts down cleanly, all cached FileSystem objects will be
    * closed automatically. These the marked paths will be deleted as a result.
@@ -1704,6 +1708,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 取消需要删除的路径在deleteOnExit集合中
    * Cancel the scheduled deletion of the path when the FileSystem is closed.
    * @param f the path to cancel deletion
    * @return true if the path was found in the delete-on-exit list.
@@ -1715,25 +1720,30 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 删除全部被标示为退出时删除的路径。这些是递归的删除全部的文件和指定路径中的目录。
    * Delete all paths that were marked as delete-on-exit. This recursively
    * deletes all files and directories in the specified paths.
    *
-   * The time to process this operation is {@code O(paths)}, with the actual
-   * time dependent on the time for existence and deletion operations to
-   * complete, successfully or not.
+   *
+   * 处理此操作的时间为{@code O（paths）}, 与实际
+   * 时间取决于存在和删除操作的时间
+   * 完成，成功与否。
    */
   protected void processDeleteOnExit() {
+    //同步处理
     synchronized (deleteOnExit) {
       for (Iterator<Path> iter = deleteOnExit.iterator(); iter.hasNext();) {
         Path path = iter.next();
         try {
           if (exists(path)) {
+            //递归删除
             delete(path, true);
           }
         }
         catch (IOException e) {
           LOGGER.info("Ignoring failure to deleteOnExit for path {}", path);
         }
+        //移除路径
         iter.remove();
       }
     }
@@ -1879,6 +1889,8 @@ public abstract class FileSystem extends Configured
     };
 
   /**
+   *
+   * 如果路径是目录，请列出给定路径中文件/目录的状态。
    * List the statuses of the files/directories in the given path if the path is
    * a directory.
    * <p>
@@ -1956,6 +1968,10 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   *
+   * 传入参数是文件时，转换为长度为1的Filestatus对象。目录的返回0-多个数组
+   *
+   * 使用用户提供的path过滤器过滤给定路径中的文件/目录。结果将添加到给定的数组<code> results </ code>中。
    * Filter files/directories in the given path using the user-supplied path
    * filter. Results are added to the given array <code>results</code>.
    * @throws FileNotFoundException when the path does not exist
@@ -1966,6 +1982,7 @@ public abstract class FileSystem extends Configured
     FileStatus listing[] = listStatus(f);
     Preconditions.checkNotNull(listing, "listStatus should not return NULL");
     for (int i = 0; i < listing.length; i++) {
+      //过滤FileStatus集合
       if (filter.accept(listing[i].getPath())) {
         results.add(listing[i]);
       }
@@ -2054,10 +2071,12 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 返回全部按照文件规则匹配的文件和不交验和的文件。结果根据名字排序
    * <p>Return all the files that match filePattern and are not checksum
    * files. Results are sorted by their names.
    *
    * <p>
+   *     一个文件名规则是
    * A filename pattern is composed of <i>regular</i> characters and
    * <i>special pattern matching</i> characters, which are:
    *
@@ -2110,6 +2129,7 @@ public abstract class FileSystem extends Configured
    * @throws IOException IO failure
    */
   public FileStatus[] globStatus(Path pathPattern) throws IOException {
+    //创建Globber构造器，传入当前对象，指定文件规则
     return Globber.createGlobber(this)
         .withPathPattern(pathPattern)
         .withPathFiltern(DEFAULT_FILTER)
@@ -2371,6 +2391,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 创建目录
    * Call {@link #mkdirs(Path, FsPermission)} with default permission.
    * @param f path
    * @return true if the directory was created
@@ -2658,6 +2679,7 @@ public abstract class FileSystem extends Configured
   }
 
   /**
+   * 返回文件状态对象代表路径
    * Return a file status object that represents the path.
    * @param f The path we want information from
    * @return a FileStatus object
@@ -3954,6 +3976,7 @@ public abstract class FileSystem extends Configured
     }
 
     /**
+     * 增加字节写入次数统计
      * Increment the bytes written in the statistics.
      * @param newBytes the additional bytes written
      */

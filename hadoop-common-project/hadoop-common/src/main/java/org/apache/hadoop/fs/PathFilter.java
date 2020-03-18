@@ -24,6 +24,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 @InterfaceStability.Stable
 public interface PathFilter {
   /**
+   * 测试指定的抽象路径名是否应包括在路径名列表中。
    * Tests whether or not the specified abstract pathname should be
    * included in a pathname list.
    *

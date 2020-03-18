@@ -35,6 +35,8 @@ import org.apache.hadoop.fs.protocolPB.PBHelper;
 import org.apache.hadoop.io.Writable;
 
 /** Interface that represents the client side information for a file.
+ * 文件系统元数据
+ * 根据FileStatus排序，可写入，
  */
 @InterfaceAudience.Public
 @InterfaceStability.Stable
@@ -42,40 +44,58 @@ public class FileStatus implements Writable, Comparable<Object>,
     Serializable, ObjectInputValidation {
 
   private static final long serialVersionUID = 0x13caeae8;
-
+  //文件路径
   private Path path;
+  //文件长度
   private long length;
+  //是否目录
   private Boolean isdir;
+  //块的副本个数
   private short block_replication;
+  //块大小
   private long blocksize;
+  //修改时间
   private long modification_time;
+  //访问时间
   private long access_time;
+  //权限
   private FsPermission permission;
+  //拥有者
   private String owner;
+  //拥有组
   private String group;
+  //符号链接
   private Path symlink;
+  //属性
   private Set<AttrFlags> attr;
 
   /**
    * Flags for entity attributes.
+   * 实体属性的标志。
    */
   public enum AttrFlags {
+    //可用的ACL信息
     /** ACL information available for this entity. */
     HAS_ACL,
+    //实体是加密的
     /** Entity is encrypted. */
     HAS_CRYPT,
+    //实体存储为擦除编码。
     /** Entity is stored erasure-coded. */
     HAS_EC,
+    //启用快照容量
     /** Snapshot capability enabled. */
     SNAPSHOT_ENABLED,
   }
 
   /**
+   * 共享的，属性的空集合，一个公共的文件状态
    * Shared, empty set of attributes (a common case for FileStatus).
    */
   public static final Set<AttrFlags> NONE = Collections.<AttrFlags>emptySet();
 
   /**
+   * 装欢boolean属性为AttrFlags的集合
    * Convert boolean attributes to a set of flags.
    * @param acl   See {@link AttrFlags#HAS_ACL}.
    * @param crypt See {@link AttrFlags#HAS_CRYPT}.
@@ -137,6 +157,23 @@ public class FileStatus implements Writable, Comparable<Object>,
         false, false, false);
   }
 
+  /**
+   * 同上
+   * @param length
+   * @param isdir
+   * @param block_replication
+   * @param blocksize
+   * @param modification_time
+   * @param access_time
+   * @param permission
+   * @param owner
+   * @param group
+   * @param symlink
+   * @param path
+   * @param hasAcl 是否拥有权限
+   * @param isEncrypted 是否加密的
+   * @param isErasureCoded 是否擦除编码
+   */
   public FileStatus(long length, boolean isdir, int block_replication,
       long blocksize, long modification_time, long access_time,
       FsPermission permission, String owner, String group, Path symlink,
@@ -158,6 +195,7 @@ public class FileStatus implements Writable, Comparable<Object>,
     this.access_time = access_time;
     if (permission != null) {
       this.permission = permission;
+      //文件系统默认权限
     } else if (isdir) {
       this.permission = FsPermission.getDirDefault();
     } else if (symlink != null) {

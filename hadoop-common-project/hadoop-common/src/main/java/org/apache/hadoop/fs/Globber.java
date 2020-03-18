@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ * globStatus的实现
  * Implementation of {@link FileSystem#globStatus(Path, PathFilter)}.
  * This has historically been package-private; it has been opened
  * up for object stores within the {@code hadoop-*} codebase ONLY.
