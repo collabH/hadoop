@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 一个全局的加密/解密池用于保存和复用加密/解密codec
  * A global compressor/decompressor pool used to save and reuse 
  * (possibly native) compression/decompression codecs.
  */

@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.FileEncryptionInfo;
 
 /**
  * Collection of blocks with their locations and the file length.
+ * 块的集合及其位置和文件长度。
  */
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
@@ -117,6 +118,7 @@ public class LocatedBlocks {
   }
 
   /**
+   * 删除编码策略
    * @return The ECPolicy for ErasureCoded file, null otherwise.
    */
   public ErasureCodingPolicy getErasureCodingPolicy() {

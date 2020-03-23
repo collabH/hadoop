@@ -55,6 +55,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.util.hash.Hash;
 
 /**
+ * 实现一个hash对象然后一定数量的哈希值。
  * Implements a hash object that returns a certain number of hashed values.
  * 
  * @see Key The general behavior of a key being stored in a filter
@@ -101,6 +102,7 @@ public final class HashFunction {
   }
 
   /**
+   * 将指定键散列为几个整数。
    * Hashes a specified key into several integers.
    * @param k The specified key.
    * @return The array of hashed values.

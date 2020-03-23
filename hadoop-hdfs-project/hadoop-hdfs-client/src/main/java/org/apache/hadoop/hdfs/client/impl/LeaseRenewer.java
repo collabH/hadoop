@@ -292,6 +292,10 @@ public class LeaseRenewer {
         && Time.monotonicNow() - emptyTime > gracePeriod;
   }
 
+  /**
+   * 客户端放入
+   * @param dfsc
+   */
   public synchronized void put(final DFSClient dfsc) {
     if (dfsc.isClientRunning()) {
       if (!isRunning() || isRenewerExpired()) {

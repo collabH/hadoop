@@ -62,8 +62,11 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.hash.Hash;
 
 /**
+ * 定义一种通用的过滤器
+ *
  * Defines the general behavior of a filter.
  * <p>
+ *  过滤器是一种数据结构，旨在提供一组<code> A </ code>的有损摘要。
  * A filter is a data structure which aims at offering a lossy summary of a set <code>A</code>.  The
  * key idea is to map entries of <code>A</code> (also called <i>keys</i>) into several positions 
  * in a vector through the use of several hash functions.
@@ -78,17 +81,22 @@ import org.apache.hadoop.util.hash.Hash;
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Unstable
 public abstract class Filter implements Writable {
+  //负数以适应旧格式
   private static final int VERSION = -1; // negative to accommodate for old format 
   /** The vector size of <i>this</i> filter. */
+  //过滤器的矢量大小
   protected int vectorSize;
 
   /** The hash function used to map a key to several positions in the vector. */
+  //用于将键映射到向量中多个位置的哈希函数。
   protected HashFunction hash;
 
   /** The number of hash function to consider. */
+  //要考虑的哈希函数的个数
   protected int nbHash;
   
   /** Type of hashing function to use. */
+  //使用的hash函数的类型
   protected int hashType;
 
   protected Filter() {}
@@ -107,12 +115,14 @@ public abstract class Filter implements Writable {
   }
 
   /**
+   * 添加key到这个过滤器
    * Adds a key to <i>this</i> filter.
    * @param key The key to add.
    */
   public abstract void add(Key key);
 
   /**
+   * 确定一个特定的key属于这个filter。判断这个key是否在过滤器中
    * Determines wether a specified key belongs to <i>this</i> filter.
    * @param key The key to test.
    * @return boolean True if the specified key belongs to <i>this</i> filter.
@@ -121,6 +131,7 @@ public abstract class Filter implements Writable {
   public abstract boolean membershipTest(Key key);
 
   /**
+   * 在<i> this </ i>过滤器和指定过滤器之间执行逻辑与。
    * Peforms a logical AND between <i>this</i> filter and a specified filter.
    * <p>
    * <b>Invariant</b>: The result is assigned to <i>this</i> filter.
@@ -192,7 +203,7 @@ public abstract class Filter implements Writable {
   }//end add()
   
   // Writable interface
-  
+  //Writable序列化接
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(VERSION);
@@ -201,6 +212,7 @@ public abstract class Filter implements Writable {
     out.writeInt(this.vectorSize);
   }
 
+  //读取数据
   @Override
   public void readFields(DataInput in) throws IOException {
     int ver = in.readInt();

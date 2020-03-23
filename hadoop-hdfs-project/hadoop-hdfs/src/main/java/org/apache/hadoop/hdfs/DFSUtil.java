@@ -137,6 +137,7 @@ public class DFSUtil {
     @Override
     public int compare(DatanodeInfo a, DatanodeInfo b) {
       // Decommissioned nodes will still be moved to the end of the list
+      //过时的节点仍将移至列表的末尾
       if (a.isDecommissioned()) {
         return b.isDecommissioned() ? 0 : 1;
       } else if (b.isDecommissioned()) {

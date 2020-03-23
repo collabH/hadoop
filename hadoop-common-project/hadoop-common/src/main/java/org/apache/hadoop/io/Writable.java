@@ -26,6 +26,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
 /**
+ * 一个序列化对象需要实现一个简单，高效序列化协议基于DataInput和DataOutput
  * A serializable object which implements a simple, efficient, serialization 
  * protocol, based on {@link DataInput} and {@link DataOutput}.
  *

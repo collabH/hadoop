@@ -62,6 +62,7 @@ public abstract class AbstractService implements Service {
   private volatile Configuration config;
 
   /**
+   * 状态改变监听器的列表，他不可能为null
    * List of state change listeners; it is final to ensure
    * that it will never be null.
    */
@@ -69,23 +70,28 @@ public abstract class AbstractService implements Service {
     = new ServiceOperations.ServiceListeners();
   /**
    * Static listeners to all events across all services
+   * 静态监听所有服务中的所有事件
    */
   private static ServiceOperations.ServiceListeners globalListeners
     = new ServiceOperations.ServiceListeners();
 
   /**
+   * 任何失败的原因-将为空
    * The cause of any failure -will be null.
+   * 如果服务由于故障而没有停止。
    * if a service did not stop due to a failure.
    */
   private Exception failureCause;
 
   /**
+   * 这个状态当服务失败的时候
    * the state in which the service was when it failed.
    * Only valid when the service is stopped due to a failure
    */
   private STATE failureState = null;
 
   /**
+   * 跨线程协调waitForServiceToStop方法的对象
    * object used to co-ordinate {@link #waitForServiceToStop(long)}
    * across threads.
    */
@@ -93,16 +99,19 @@ public abstract class AbstractService implements Service {
     new AtomicBoolean(false);
 
   /**
+   * 生命周期过渡的历史
    * History of lifecycle transitions
    */
   private final List<LifecycleEvent> lifecycleHistory
     = new ArrayList<LifecycleEvent>(5);
 
   /**
+   * 阻塞依赖关系的map
    * Map of blocking dependencies
    */
   private final Map<String,String> blockerMap = new HashMap<String, String>();
 
+  //状态该表锁
   private final Object stateChangeLock = new Object();
  
   /**
@@ -143,6 +152,7 @@ public abstract class AbstractService implements Service {
 
   /**
    * {@inheritDoc}
+   * 调用serviceInit
    * This invokes {@link #serviceInit}
    * @param conf the configuration of the service. This must not be null
    * @throws ServiceStateException if the configuration was null,
@@ -154,22 +164,29 @@ public abstract class AbstractService implements Service {
       throw new ServiceStateException("Cannot initialize service "
                                       + getName() + ": null configuration");
     }
+    //如果已经初始化
     if (isInState(STATE.INITED)) {
       return;
     }
+    //状态同步锁
     synchronized (stateChangeLock) {
+      //如果老状态不等于目前的新状态
       if (enterState(STATE.INITED) != STATE.INITED) {
+        //设置conf配置
         setConfig(conf);
         try {
+          //服务初始化
           serviceInit(config);
           if (isInState(STATE.INITED)) {
-            //if the service ended up here during init,
+            //如果服务在初始化期间在此处结束，
             //notify the listeners
             notifyListeners();
           }
         } catch (Exception e) {
           noteFailure(e);
+          //停止服务
           ServiceOperations.stopQuietly(LOG, this);
+          //抛出异常
           throw ServiceStateException.convert(e);
         }
       }
@@ -402,7 +419,9 @@ public abstract class AbstractService implements Service {
   }
 
   /**
+   * 通知本地和全局状态改变的监听器
    * Notify local and global listeners of state changes.
+   * 监听器引发的异常不会传递。
    * Exceptions raised by listeners are NOT passed up.
    */
   private void notifyListeners() {
@@ -415,6 +434,7 @@ public abstract class AbstractService implements Service {
   }
 
   /**
+   * 将状态更改事件添加到生命周期历史记录
    * Add a state change event to the lifecycle history
    */
   private void recordLifecycleEvent() {
@@ -438,10 +458,11 @@ public abstract class AbstractService implements Service {
    */
   private STATE enterState(STATE newState) {
     assert stateModel != null : "null state in " + name + " " + this.getClass();
+    //初始化时的老状态NOTINITED
     STATE oldState = stateModel.enterState(newState);
     if (oldState != newState) {
       LOG.debug("Service: {} entered state {}", getName(), getServiceState());
-
+      //将老状态加入到历史记录中
       recordLifecycleEvent();
     }
     return oldState;

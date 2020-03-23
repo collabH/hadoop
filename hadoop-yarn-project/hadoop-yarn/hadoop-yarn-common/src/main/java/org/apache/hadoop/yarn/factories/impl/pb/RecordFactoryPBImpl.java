@@ -48,7 +48,7 @@ public class RecordFactoryPBImpl implements RecordFactory {
   @SuppressWarnings("unchecked")
   @Override
   public <T> T newRecordInstance(Class<T> clazz) {
-    
+    //缓冲对应类的构造器
     Constructor<?> constructor = cache.get(clazz);
     if (constructor == null) {
       Class<?> pbClazz = null;

@@ -49,13 +49,16 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The job submitter's view of the Job.
- * 
+ * 作业提交者对作业的试图
+ *
+ * 它允许用户配置这个job，提交它，控制它的执行，查询状态。设置的方法仅在提交作业之前有效，之后它们将抛出IllegalStateException。
  * <p>It allows the user to configure the
  * job, submit it, control its execution, and query the state. The set methods
  * only work until the job is submitted, afterwards they will throw an 
  * IllegalStateException. </p>
  * 
  * <p>
+ *     一般用户创建一个应用，通过{@link Job}描述作业的各个方面，然后提交作业并监控其进度
  * Normally the user creates the application, describes various facets of the
  * job via {@link Job} and then submits the job and monitor its progress.</p>
  * 
@@ -85,42 +88,62 @@ import org.slf4j.LoggerFactory;
 public class Job extends JobContextImpl implements JobContext, AutoCloseable {
   private static final Logger LOG = LoggerFactory.getLogger(Job.class);
 
+  //job状态，定义和运行
   @InterfaceStability.Evolving
   public enum JobState {DEFINE, RUNNING};
+  //最大job状态年纪
   private static final long MAX_JOBSTATUS_AGE = 1000 * 2;
+  //输出过滤器参数
   public static final String OUTPUT_FILTER = "mapreduce.client.output.filter";
+  //作业完成后轮询查询状态的间隔
   /** Key in mapred-*.xml that sets completionPollInvervalMillis */
   public static final String COMPLETION_POLL_INTERVAL_KEY = 
     "mapreduce.client.completion.pollinterval";
-  
+
+  //默认的完成轮询间隔
   /** Default completionPollIntervalMillis is 5000 ms. */
   static final int DEFAULT_COMPLETION_POLL_INTERVAL = 5000;
+
+  //进度监控轮询间隔键
   /** Key in mapred-*.xml that sets progMonitorPollIntervalMillis */
   public static final String PROGRESS_MONITOR_POLL_INTERVAL_KEY =
     "mapreduce.client.progressmonitor.pollinterval";
+  //默认为1s
   /** Default progMonitorPollIntervalMillis is 1000 ms. */
   static final int DEFAULT_MONITOR_POLL_INTERVAL = 1000;
 
+  //使用的通用解析器
   public static final String USED_GENERIC_PARSER = 
       "mapreduce.client.genericoptionsparser.used";
+  //提交副本
   public static final String SUBMIT_REPLICATION = 
       "mapreduce.client.submit.file.replication";
+  //默认提交副本
   public static final int DEFAULT_SUBMIT_REPLICATION = 10;
+  //使用WILDCARD进行LIBJARS
   public static final String USE_WILDCARD_FOR_LIBJARS =
       "mapreduce.client.libjars.wildcard";
+  //默认为true
   public static final boolean DEFAULT_USE_WILDCARD_FOR_LIBJARS = true;
 
+  //task状态，none，杀死，失败，成功，all
   @InterfaceStability.Evolving
   public enum TaskStatusFilter { NONE, KILLED, FAILED, SUCCEEDED, ALL }
 
   static {
+    //默认加载资源
     ConfigUtil.loadResources();
   }
 
+  //默认job状态为DEFINE
   private JobState state = JobState.DEFINE;
+  //任务状态
   private JobStatus status;
+  //状态时间
   private long statustime;
+  //MR集群
   private Cluster cluster;
+  //
   private ReservationId reservationId;
 
   /**
@@ -297,6 +320,7 @@ public class Job extends JobContextImpl implements JobContext, AutoCloseable {
     return job;
   }
 
+  //校验状态
   private void ensureState(JobState state) throws IllegalStateException {
     if (state != this.state) {
       throw new IllegalStateException("Job in state "+ this.state + 
@@ -311,6 +335,7 @@ public class Job extends JobContextImpl implements JobContext, AutoCloseable {
   }
 
   /**
+   * 一些方法依赖于具有最近的作业状态对象。刷新必要时
    * Some methods rely on having a recent job status object.  Refresh
    * it, if necessary
    */
@@ -327,6 +352,7 @@ public class Job extends JobContextImpl implements JobContext, AutoCloseable {
    */
   synchronized void updateStatus() throws IOException {
     try {
+      //从MR集群获取状态
       this.status = ugi.doAs(new PrivilegedExceptionAction<JobStatus>() {
         @Override
         public JobStatus run() throws IOException, InterruptedException {
@@ -340,6 +366,7 @@ public class Job extends JobContextImpl implements JobContext, AutoCloseable {
     if (this.status == null) {
       throw new IOException("Job status not available ");
     }
+    //状态更新时间
     this.statustime = System.currentTimeMillis();
   }
   
@@ -370,12 +397,13 @@ public class Job extends JobContextImpl implements JobContext, AutoCloseable {
    */
   public String getTrackingURL(){
     ensureState(JobState.RUNNING);
-    return status.getTrackingUrl().toString();
+    return status.getTrackingUrl();
   }
 
   /**
+   * 获取提交的作业配置的路径。
    * Get the path of the submitted job configuration.
-   * 
+   * 获取job的文件路径
    * @return the path of the submitted job configuration.
    */
   public String getJobFile() {
@@ -1590,10 +1618,12 @@ public class Job extends JobContextImpl implements JobContext, AutoCloseable {
   public boolean waitForCompletion(boolean verbose
                                    ) throws IOException, InterruptedException,
                                             ClassNotFoundException {
+    //默认状态
     if (state == JobState.DEFINE) {
       submit();
     }
     if (verbose) {
+      //监听输出任务
       monitorAndPrintJob();
     } else {
       // get the completion poll interval from the client.

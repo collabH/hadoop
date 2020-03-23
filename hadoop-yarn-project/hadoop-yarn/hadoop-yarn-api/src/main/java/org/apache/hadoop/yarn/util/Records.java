@@ -24,6 +24,7 @@ import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 
 /**
  * Convenient API record utils
+ * 方便的API记录实用程序
  */
 @LimitedPrivate({ "MapReduce", "YARN" })
 @Unstable

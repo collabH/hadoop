@@ -34,7 +34,7 @@ public final class FsCreateModes extends FsPermission {
 
   /**
    * Create from unmasked mode and umask.
-   *
+   * 从非屏蔽模式和umask创建。
    * If the mode is already an FsCreateModes object, return it.
    */
   public static FsPermission applyUMask(FsPermission mode,

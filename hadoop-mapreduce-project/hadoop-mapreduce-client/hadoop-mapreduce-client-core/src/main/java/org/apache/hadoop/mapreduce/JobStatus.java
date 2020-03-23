@@ -36,6 +36,7 @@ import org.apache.hadoop.util.StringInterner;
 
 /**************************************************
  * Describes the current status of a job.
+ * 描述作业的当前状态。
  **************************************************/
 @InterfaceAudience.Public
 @InterfaceStability.Evolving

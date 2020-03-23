@@ -159,17 +159,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * MapReudce的 AM
  * The Map-Reduce Application Master.
+ * 状态机封装在Job接口的实现中。
  * The state machine is encapsulated in the implementation of Job interface.
+ * 所有状态更改都通过Job界面进行。每个事件结果在一个工作中的有限状态过渡。
  * All state changes happens via Job interface. Each event 
  * results in a Finite State Transition in Job.
- * 
+ * MR AppMaster由松散耦合服务组成。服务通过事件相互交互。这些组件类似于Actors模型。
  * MR AppMaster is the composition of loosely coupled services. The services 
  * interact with each other via events. The components resembles the 
- * Actors model. The component acts on received event and send out the 
+ * Actors model.
+ * 该组件对接收到的事件起作用，并将事件发送给其他组件
+ * The component acts on received event and send out the
  * events to other components.
+ * 这使它保持高度并发，而没有或只需很少的同步需求。
  * This keeps it highly concurrent with no or minimal synchronization needs.
- * 
+ *
+ * 这些事件由中央调度机制调度。所有组件注册到分派器。
  * The events are dispatched by a central Dispatch mechanism. All components
  * register to the Dispatcher.
  * 
@@ -185,26 +192,43 @@ public class MRAppMaster extends CompositeService {
    * Priority of the MRAppMaster shutdown hook.
    */
   public static final int SHUTDOWN_HOOK_PRIORITY = 30;
+  //中间数据加密算法
   public static final String INTERMEDIATE_DATA_ENCRYPTION_ALGO = "HmacSHA1";
 
+  //时钟提供4种时间
   private Clock clock;
+  //开始时间
   private final long startTime;
+  //应用提交时间
   private final long appSubmitTime;
+  //应用名称
   private String appName;
+  //AM重试id
   private final ApplicationAttemptId appAttemptID;
+  //容器ID
   private final ContainerId containerID;
   private final String nmHost;
   private final int nmPort;
   private final int nmHttpPort;
+  //AM指标
   protected final MRAppMetrics metrics;
+  //之前运行已完成的任务
   private Map<TaskId, TaskInfo> completedTasksFromPreviousRun;
+  //am信息
   private List<AMInfo> amInfos;
+  //应用上下文
   private AppContext context;
+  //转发器
   private Dispatcher dispatcher;
+  //客户端服务
   private ClientService clientService;
+  //容器分配者
   private ContainerAllocator containerAllocator;
+  //容器发射器
   private ContainerLauncher containerLauncher;
+  //事件处理器
   private EventHandler<CommitterEvent> committerEventHandler;
+  //投机者
   private Speculator speculator;
   protected TaskAttemptListener taskAttemptListener;
   protected JobTokenSecretManager jobTokenSecretManager =
@@ -265,7 +289,9 @@ public class MRAppMaster extends CompositeService {
     this.nmHost = nmHost;
     this.nmPort = nmPort;
     this.nmHttpPort = nmHttpPort;
+    //创建默认AM指标
     this.metrics = MRAppMetrics.create();
+    //定时日志任务
     logSyncer = TaskLog.createLogSyncer();
     LOG.info("Created MRAppMaster for application " + applicationAttemptId);
   }

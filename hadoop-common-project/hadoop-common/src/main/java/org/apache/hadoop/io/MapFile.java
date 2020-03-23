@@ -42,7 +42,9 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_MAP_INDEX_SK
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_MAP_INDEX_SKIP_KEY;
 
 /** A file-based map from keys to values.
- * 
+ *  基于map的文件通过键值对
+ *
+ *  一个map是一个穆勒包含俩个文件，数据文件包含全部键值对在这个map里，和一个较小的索引文件包含一个键的分数，这个分数通过getIndexInterval来决定
  * <p>A map is a directory containing two files, the <code>data</code> file,
  * containing all keys and values in the map, and a smaller <code>index</code>
  * file, containing a fraction of the keys.  The fraction is determined by
@@ -72,10 +74,14 @@ public class MapFile {
 
   /** Writes a new map. */
   public static class Writer implements java.io.Closeable {
+    //主数据文件
     private SequenceFile.Writer data;
+    //索引文件
     private SequenceFile.Writer index;
 
+    //索引文件间隔配置名称
     final private static String INDEX_INTERVAL = "io.map.index.interval";
+    //默认索引间隔128
     private int indexInterval = 128;
 
     private long size;

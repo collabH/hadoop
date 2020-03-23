@@ -367,6 +367,7 @@ public interface HdfsFileStatus
   int getChildrenNum();
 
   /**
+   * 如果已设置，请获取擦除编码策略。
    * Get the erasure coding policy if it's set.
    * @return the erasure coding policy
    */

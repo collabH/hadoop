@@ -137,8 +137,20 @@ class FSDirStatAndListingOp {
   }
 
   /**
+   * 根据指定的范围获取块地址
    * Get block locations within the specified range.
    * @see ClientProtocol#getBlockLocations(String, long, long)
+   * @throws IOException
+   */
+  /**
+   *
+   * @param fsd hdfs的dir
+   * @param pc 权限娇艳
+   * @param src 目标文件地址
+   * @param offset 偏移量
+   * @param length 读取长度
+   * @param needBlockToken 是否需要token
+   * @return
    * @throws IOException
    */
   static GetBlockLocationsResult getBlockLocations(
@@ -148,17 +160,23 @@ class FSDirStatAndListingOp {
         "Negative offset is not supported. File: " + src);
     Preconditions.checkArgument(length >= 0,
         "Negative length is not supported. File: " + src);
+    //获取块管理器
     BlockManager bm = fsd.getBlockManager();
     fsd.readLock();
     try {
+      //解析路径
       final INodesInPath iip = fsd.resolvePath(pc, src, DirOp.READ);
       src = iip.getPath();
       final INodeFile inode = INodeFile.valueOf(iip.getLastINode(), src);
+      //是否开启权限
       if (fsd.isPermissionEnabled()) {
+        //校验读权限
         fsd.checkPathAccess(pc, iip, FsAction.READ);
+        //校验是否不可读的superuser
         fsd.checkUnreadableBySuperuser(pc, iip);
       }
 
+      //得到文件大小
       final long fileSize = iip.isSnapshot()
           ? inode.computeFileSize(iip.getPathSnapshotId())
           : inode.computeFileSizeNotIncludingLastUcBlock();

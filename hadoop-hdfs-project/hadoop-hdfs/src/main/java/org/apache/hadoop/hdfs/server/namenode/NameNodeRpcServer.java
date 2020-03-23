@@ -766,6 +766,7 @@ public class NameNodeRpcServer implements NamenodeProtocols {
       throws IOException {
     checkNNStartup();
     metrics.incrGetBlockLocations();
+    //得到block datanode的地址
     LocatedBlocks locatedBlocks =
         namesystem.getBlockLocations(getClientMachine(), src, offset, length);
     return locatedBlocks;
@@ -784,7 +785,9 @@ public class NameNodeRpcServer implements NamenodeProtocols {
       CryptoProtocolVersion[] supportedVersions, String ecPolicyName,
       String storagePolicy)
       throws IOException {
+    //校验namenode
     checkNNStartup();
+    //得到客户端物理机器地址
     String clientMachine = getClientMachine();
     if (stateChangeLog.isDebugEnabled()) {
       stateChangeLog.debug("*DIR* NameNode.create: file "
@@ -794,9 +797,12 @@ public class NameNodeRpcServer implements NamenodeProtocols {
       throw new IOException("create: Pathname too long.  Limit "
           + MAX_PATH_LENGTH + " characters, " + MAX_PATH_DEPTH + " levels.");
     }
+    //校验namenode系统 ha上下文操作类型
     namesystem.checkOperation(OperationCategory.WRITE);
+    //得到缓存实体根据和载荷
     CacheEntryWithPayload cacheEntry = RetryCache.waitForCompletion(retryCache, null);
     if (cacheEntry != null && cacheEntry.isSuccess()) {
+      //得到载荷 HdfsFileStatus hdfs文件状态
       return (HdfsFileStatus) cacheEntry.getPayload();
     }
 
@@ -1137,6 +1143,7 @@ public class NameNodeRpcServer implements NamenodeProtocols {
   }
 
   /**
+   * 校验存储文件路径长度是否超过最大路径长度
    * Check path length does not exceed maximum.  Returns true if
    * length and depth are okay.  Returns false if length is too long 
    * or depth is too great.
@@ -1892,7 +1899,12 @@ public class NameNodeRpcServer implements NamenodeProtocols {
     }
   }
 
+  /**
+   * 得到client机器地址
+   * @return
+   */
   private static String getClientMachine() {
+    //得到客户端机器地址
     String clientMachine = Server.getRemoteAddress();
     if (clientMachine == null) { //not a RPC client
       clientMachine = "";
@@ -2318,6 +2330,10 @@ public class NameNodeRpcServer implements NamenodeProtocols {
     }
   }
 
+  /**
+   * 校验namenode是否启动
+   * @throws IOException
+   */
   private void checkNNStartup() throws IOException {
     if (!this.nn.isStarted()) {
       String message = NameNode.composeNotStartedMessage(this.nn.getRole());

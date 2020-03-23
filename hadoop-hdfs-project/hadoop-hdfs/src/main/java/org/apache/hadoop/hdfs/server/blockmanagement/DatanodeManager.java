@@ -106,9 +106,10 @@ public class DatanodeManager {
   /** Cluster network topology. */
   private final NetworkTopology networktopology;
 
-  /** Host names to datanode descriptors mapping. */
+  /**主机名到数据节点描述符的映射。 */
   private final Host2NodesMap host2DatanodeMap = new Host2NodesMap();
 
+  //DNS转换映射
   private final DNSToSwitchMapping dnsToSwitchMapping;
   private final boolean rejectUnresolvedTopologyDN;
 
@@ -128,10 +129,10 @@ public class DatanodeManager {
   /** Ask Datanode only up to this many blocks to delete. */
   private volatile int blockInvalidateLimit;
 
-  /** The interval for judging stale DataNodes for read/write */
+  /** 判断过时的DataNode进行读/写的时间间隔 */
   private final long staleInterval;
   
-  /** Whether or not to avoid using stale DataNodes for reading */
+  /** 是否避免使用过时的DataNode进行读取 */
   private final boolean avoidStaleDataNodesForRead;
 
   /** Whether or not to consider lad for reading. */
@@ -427,7 +428,9 @@ public class DatanodeManager {
     return heartbeatManager;
   }
 
+  //不活跃datanode
   private boolean isInactive(DatanodeInfo datanode) {
+    //过期或者避免过期datandoe读取已经是否过时
     return datanode.isDecommissioned() ||
         (avoidStaleDataNodesForRead && datanode.isStale(staleInterval));
 
@@ -454,6 +457,7 @@ public class DatanodeManager {
         new DFSUtil.ServiceComparator();
     // sort located block
     for (LocatedBlock lb : locatedBlocks) {
+      //默认都是false
       if (lb.isStriped()) {
         sortLocatedStripedBlock(lb, comparator);
       } else {
@@ -496,6 +500,7 @@ public class DatanodeManager {
   /**
    * Move decommissioned/stale datanodes to the bottom. Also, sort nodes by
    * network distance.
+   * 移动过时/老旧的datanodes到底部，另外，按网络距离对节点进行排序。
    *
    * @param lb located block
    * @param targetHost target host
@@ -506,15 +511,20 @@ public class DatanodeManager {
     // As it is possible for the separation of node manager and datanode, 
     // here we should get node but not datanode only .
     boolean nonDatanodeReader = false;
+    //本地获取 根据目标地址得到对应Datanode
     Node client = getDatanodeByHost(targetHost);
     if (client == null) {
+      //没有datanode设置为true
       nonDatanodeReader = true;
+      //创建hosts列表
       List<String> hosts = new ArrayList<>(1);
       hosts.add(targetHost);
+      //解析hosts todo
       List<String> resolvedHosts = dnsToSwitchMapping.resolve(hosts);
       if (resolvedHosts != null && !resolvedHosts.isEmpty()) {
         String rName = resolvedHosts.get(0);
         if (rName != null) {
+          //创建新的dataNode节点
           client = new NodeBase(rName + NodeBase.PATH_SEPARATOR_STR +
             targetHost);
         }
@@ -523,21 +533,27 @@ public class DatanodeManager {
           "awareness scripts are functional.");
       }
     }
-
+    //得到datanode信息集合
     DatanodeInfo[] di = lb.getLocations();
-    // Move decommissioned/stale datanodes to the bottom
+    // Move decommissioned/stale datanodes to the bottom 移动过期节点到底部
     Arrays.sort(di, comparator);
 
-    // Sort nodes by network distance only for located blocks
+    // Sort nodes by network distance only for located blocks 仅根据定位的块按网络距离对节点排序
+    //拿到全部datanode的index
     int lastActiveIndex = di.length - 1;
+    //从最后节点开始判断是否不活跃节点，并且移动游标
     while (lastActiveIndex > 0 && isInactive(di[lastActiveIndex])) {
       --lastActiveIndex;
     }
+    //获取datanode的长度
     int activeLen = lastActiveIndex + 1;
+    //是否没有datanode
     if(nonDatanodeReader) {
+      //使用网络地址进行排序 client新创建的nodebase，以及LocatedBlock的地址，活跃datanode长度
       networktopology.sortByDistanceUsingNetworkLocation(client,
           lb.getLocations(), activeLen, createSecondaryNodeSorter());
     } else {
+      //根据本地实例排序
       networktopology.sortByDistance(client, lb.getLocations(), activeLen,
           createSecondaryNodeSorter());
     }
@@ -547,9 +563,15 @@ public class DatanodeManager {
     lb.updateCachedStorageInfo();
   }
 
+  /**
+   * todo
+   * 创建第二节点排序起
+   * @return
+   */
   private Consumer<List<DatanodeInfo>> createSecondaryNodeSorter() {
     Consumer<List<DatanodeInfo>> secondarySort =
         list -> Collections.shuffle(list);
+    //是否考虑读取加载
     if (readConsiderLoad) {
       Comparator<DatanodeInfo> comp =
           Comparator.comparingInt(DatanodeInfo::getXceiverCount);

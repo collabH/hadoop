@@ -22,7 +22,9 @@ import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Stable;
 
 /**
+ * 一个简单的时钟接口，为您提供时间。
  * A simple clock interface that gives you time.
+ * 包括控制器事件，监控事件，系统时间和UTC时间
  */
 @Public
 @Stable

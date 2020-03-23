@@ -37,11 +37,11 @@ public class LocalFileSystem extends ChecksumFileSystem {
   //本地文件系统URL前缀
   static final URI NAME = URI.create("file:///");
   static private Random rand = new Random();
-  
+
   public LocalFileSystem() {
     this(new RawLocalFileSystem());
   }
-  
+
   @Override
   public void initialize(URI name, Configuration conf) throws IOException {
     if (fs.getConf() == null) {
@@ -67,11 +67,11 @@ public class LocalFileSystem extends ChecksumFileSystem {
   public FileSystem getRaw() {
     return getRawFileSystem();
   }
-    
+
   public LocalFileSystem(FileSystem rawLocalFileSystem) {
     super(rawLocalFileSystem);
   }
-    
+
   /** Convert a path to a File. */
   public File pathToFile(Path path) {
     return ((RawLocalFileSystem)fs).pathToFile(path);
@@ -90,6 +90,8 @@ public class LocalFileSystem extends ChecksumFileSystem {
   }
 
   /**
+   *
+   * 将文件移动到同一设备上的错误文件目录中，以使它们的存储不会被重用。
    * Moves files to a bad file directory on the same device, so that their
    * storage will not be reused.
    */
@@ -98,11 +100,13 @@ public class LocalFileSystem extends ChecksumFileSystem {
                                        long inPos,
                                        FSDataInputStream sums, long sumsPos) {
     try {
-      // canonicalize f
+      // canonicalize f 规范化FileSystem
       File f = ((RawLocalFileSystem)fs).pathToFile(p).getCanonicalFile();
-      
+
       // find highest writable parent dir of f on the same device
+      //发现最高的可写的f的父文件夹在相同的设备上
       String device = new DF(f, getConf()).getMount();
+      //得到父文件
       File parent = f.getParentFile();
       File dir = null;
       while (parent != null && FileUtil.canWrite(parent) &&
@@ -115,8 +119,8 @@ public class LocalFileSystem extends ChecksumFileSystem {
         throw new IOException(
                               "not able to find the highest writable parent dir");
       }
-        
-      // move the file there
+
+      // move the file there 移动到bad_files文件夹下
       File badDir = new File(dir, "bad_files");
       if (!badDir.mkdirs()) {
         if (!badDir.isDirectory()) {

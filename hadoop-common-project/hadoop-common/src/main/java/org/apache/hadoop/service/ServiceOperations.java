@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *此类包含一组与服务一起使用的方法，尤其是可以遍历它们的生命周期。
  * This class contains a set of methods to work with services, especially
  * to walk them through their lifecycle.
  */
@@ -56,6 +57,7 @@ public final class ServiceOperations {
   }
 
   /**
+   * 停止一个服务，如果他是null什么都不做，异常捕获和日志在warn几把，但是不抛出。这个操作用于使用在cleanup时期
    * Stop a service; if it is null do nothing. Exceptions are caught and
    * logged at warn level. (but not Throwables). This operation is intended to
    * be used in cleanup operations
@@ -108,7 +110,9 @@ public final class ServiceOperations {
   }
 
   /**
+   * 用于管理{@link ServiceStateChangeListener}实例列表的类，
    * Class to manage a list of {@link ServiceStateChangeListener} instances,
+   * 包括一个通知循环，该通知循环可在通知过程中抵御列表的更改。
    * including a notification loop that is robust against changes to the list
    * during the notification process.
    */
@@ -116,6 +120,7 @@ public final class ServiceOperations {
     /**
      * List of state change listeners; it is final to guarantee
      * that it will never be null.
+     * 状态改变监听器的列表，它是最终保证它不为null
      */
     private final List<ServiceStateChangeListener> listeners =
       new ArrayList<ServiceStateChangeListener>();
@@ -149,22 +154,29 @@ public final class ServiceOperations {
     }
 
     /**
+     * 更改为新状态并通知所有侦听器。
      * Change to a new state and notify all listeners.
+     * 该方法将阻塞，直到发出所有通知为止。
      * This method will block until all notifications have been issued.
+     * 在通知开始之前，它会缓存监听器列表，
      * It caches the list of listeners before the notification begins,
+     * 因此添加或删除监听器将不可见。
      * so additions or removal of listeners will not be visible.
      * @param service the service that has changed state
      */
     public void notifyListeners(Service service) {
+      //对回调列表进行快速快照
       //take a very fast snapshot of the callback list
       //very much like CopyOnWriteArrayList, only more minimal
       ServiceStateChangeListener[] callbacks;
+      //将监听器转换为回调数组快照
       synchronized (this) {
         callbacks = listeners.toArray(new ServiceStateChangeListener[listeners.size()]);
       }
       //iterate through the listeners outside the synchronized method,
       //ensuring that listener registration/unregistration doesn't break anything
       for (ServiceStateChangeListener l : callbacks) {
+        //改变状态
         l.stateChanged(service);
       }
     }

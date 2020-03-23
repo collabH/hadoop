@@ -156,11 +156,13 @@ public class Text extends BinaryComparable
    */
   public int find(String what, int start) {
     try {
+      //转换为bytebuffer
       ByteBuffer src = ByteBuffer.wrap(this.bytes,0,this.length);
       ByteBuffer tgt = encode(what);
       byte b = tgt.get();
       src.position(start);
-          
+
+      //递归查找
       while (src.hasRemaining()) {
         if (b == src.get()) { // matching first byte
           src.mark(); // save position in loop
@@ -220,7 +222,7 @@ public class Text extends BinaryComparable
    * @param start the first position of the new string
    * @param len the number of bytes of the new string
    */
-  public void set(byte[] utf8, int start, int len) {
+  public void  set(byte[] utf8, int start, int len) {
     setCapacity(len, false);
     System.arraycopy(utf8, start, bytes, 0, len);
     this.length = len;

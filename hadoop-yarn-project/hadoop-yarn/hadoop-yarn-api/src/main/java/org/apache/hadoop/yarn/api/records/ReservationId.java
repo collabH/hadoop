@@ -32,6 +32,8 @@ import org.apache.hadoop.yarn.util.Records;
  * a reservation.
  * </p>
  *
+ *
+ * 标识符的全局唯一性是通过使用<em>集群时间戳</ em>（即{@code ResourceManager} 的开始时间）以及用于保留的单调递增计数器来实现的。
  * <p>
  * The globally unique nature of the identifier is achieved by using the
  * <em>cluster timestamp</em> i.e. start-time of the {@code ResourceManager}

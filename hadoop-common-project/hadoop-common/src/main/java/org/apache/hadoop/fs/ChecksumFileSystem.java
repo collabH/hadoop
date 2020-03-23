@@ -116,15 +116,17 @@ public abstract class ChecksumFileSystem extends FilterFileSystem {
     return getChecksumLength(fileSize, getBytesPerSum());
   }
 
-  /** Return the bytes Per Checksum */
+  /** 返回每个校验和的字节 */
   public int getBytesPerSum() {
     return bytesPerChecksum;
   }
 
   private int getSumBufferSize(int bytesPerSum, int bufferSize) {
+    //默认缓存大小
     int defaultBufferSize = getConf().getInt(
                        LocalFileSystemConfigKeys.LOCAL_FS_STREAM_BUFFER_SIZE_KEY,
                        LocalFileSystemConfigKeys.LOCAL_FS_STREAM_BUFFER_SIZE_DEFAULT);
+    //缓存大小是校验和字节的倍数
     int proportionalBufferSize = bufferSize / bytesPerSum;
     return Math.max(bytesPerSum,
                     Math.max(proportionalBufferSize, defaultBufferSize));
@@ -153,14 +155,18 @@ public abstract class ChecksumFileSystem extends FilterFileSystem {
     public ChecksumFSInputChecker(ChecksumFileSystem fs, Path file, int bufferSize)
       throws IOException {
       super( file, fs.getFileStatus(file).getReplication() );
+      //读取数据
       this.datas = fs.getRawFileSystem().open(file, bufferSize);
       this.fs = fs;
+      //得到检验和文件
       Path sumFile = fs.getChecksumFile(file);
       try {
+        //得到和的缓存大小
         int sumBufferSize = fs.getSumBufferSize(fs.getBytesPerSum(), bufferSize);
+        //读取校验和文件
         sums = fs.getRawFileSystem().open(sumFile, sumBufferSize);
-
         byte[] version = new byte[CHECKSUM_VERSION.length];
+        //读取校验和
         sums.readFully(version);
         if (!Arrays.equals(version, CHECKSUM_VERSION))
           throw new IOException("Not a checksum file: "+sumFile);
@@ -343,6 +349,7 @@ public abstract class ChecksumFileSystem extends FilterFileSystem {
   }
 
   /**
+   * 开启一个文件通过指定路径
    * Opens an FSDataInputStream at the indicated Path.
    * @param f the file name to open
    * @param bufferSize the size of the buffer to be used.
@@ -351,8 +358,12 @@ public abstract class ChecksumFileSystem extends FilterFileSystem {
   public FSDataInputStream open(Path f, int bufferSize) throws IOException {
     FileSystem fs;
     InputStream in;
+
+    //如果开启校验和
     if (verifyChecksum) {
+      //fs为当前对象
       fs = this;
+      //创建校验和输入校验器
       in = new ChecksumFSInputChecker(this, f, bufferSize);
     } else {
       fs = getRawFileSystem();

@@ -28,7 +28,8 @@ import org.apache.hadoop.yarn.util.Records;
 /**
  * <p><code>ApplicationAttemptId</code> denotes the particular <em>attempt</em>
  * of an <code>ApplicationMaster</code> for a given {@link ApplicationId}.</p>
- * 
+ *
+ * 为ApplicationMaster重试所提供的id
  * <p>Multiple attempts might be needed to run an application to completion due
  * to temporal failures of the <code>ApplicationMaster</code> such as hardware
  * failures, connectivity issues etc. on the node on which it was scheduled.</p>
@@ -49,6 +50,7 @@ public abstract class ApplicationAttemptId implements
   @Unstable
   public static ApplicationAttemptId newInstance(ApplicationId appId,
       int attemptId) {
+    //构造出ApplicationAttemptId
     ApplicationAttemptId appAttemptId =
         Records.newRecord(ApplicationAttemptId.class);
     appAttemptId.setApplicationId(appId);

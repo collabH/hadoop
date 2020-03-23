@@ -114,6 +114,7 @@ public class DFSOutputStream extends FSOutputSummer
   protected final long blockSize;
   protected final int bytesPerChecksum;
 
+  //当前数据包
   protected DFSPacket currentPacket = null;
   protected DataStreamer streamer;
   protected int packetSize = 0; // write packet size, not including the header.
@@ -260,6 +261,23 @@ public class DFSOutputStream extends FSOutputSummer
     }
   }
 
+  /**
+   * 创建新流
+   * @param dfsClient 用于RPC链接namenode的客户端
+   * @param src 目标路径
+   * @param masked 权限
+   * @param flag 创建标示
+   * @param createParent
+   * @param replication
+   * @param blockSize
+   * @param progress
+   * @param checksum
+   * @param favoredNodes
+   * @param ecPolicyName
+   * @param storagePolicy
+   * @return
+   * @throws IOException
+   */
   static DFSOutputStream newStreamForCreate(DFSClient dfsClient, String src,
       FsPermission masked, EnumSet<CreateFlag> flag, boolean createParent,
       short replication, long blockSize, Progressable progress,
@@ -277,6 +295,7 @@ public class DFSOutputStream extends FSOutputSummer
       while (shouldRetry) {
         shouldRetry = false;
         try {
+          //创建文件
           stat = dfsClient.namenode.create(src, masked, dfsClient.clientName,
               new EnumSetWritable<>(flag), createParent, replication,
               blockSize, SUPPORTED_CRYPTO_VERSIONS, ecPolicyName,
@@ -311,6 +330,7 @@ public class DFSOutputStream extends FSOutputSummer
       }
       Preconditions.checkNotNull(stat, "HdfsFileStatus should not be null!");
       final DFSOutputStream out;
+      //擦除编码策略不为null，生成不同的outputstream
       if(stat.getErasureCodingPolicy() != null) {
         out = new DFSStripedOutputStream(dfsClient, src, stat,
             flag, progress, checksum, favoredNodes);
@@ -614,7 +634,7 @@ public class DFSOutputStream extends FSOutputSummer
 
   /**
    * Flush/Sync buffered data to DataNodes.
-   *
+   *  刷新或同步buffer数据到datanodes里
    * @param isSync
    *          Whether or not to require all replicas to flush data to the disk
    *          device

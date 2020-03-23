@@ -504,11 +504,13 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
         namenodeUri != null ? namenodeUri.getAuthority() : "null", ugi, this);
   }
 
-  /** Get a lease and start automatic renewal */
+  /** 获取租约并开始自动续订 */
   private void beginFileLease(final long inodeId, final DFSOutputStream out)
       throws IOException {
+    //得到的DFSOutputStream放入filesBeingWritten map中
     synchronized (filesBeingWritten) {
       putFileBeingWritten(inodeId, out);
+      //当前客户端放入租约续订
       getLeaseRenewer().put(this);
     }
   }
@@ -536,6 +538,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       // update the last lease renewal time only when there was no
       // writes. once there is one write stream open, the lease renewer
       // thread keeps it updated well with in anyone's expiration time.
+      //第一次操作
       if (lastLeaseRenewal == 0) {
         updateLastLeaseRenewal();
       }
@@ -878,6 +881,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public LocatedBlocks getLocatedBlocks(String src, long start, long length)
       throws IOException {
     try (TraceScope ignored = newPathTraceScope("getBlockLocations", src)) {
+      //调用得到块的位置
       return callGetBlockLocations(namenode, src, start, length);
     }
   }
@@ -889,6 +893,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       String src, long start, long length)
       throws IOException {
     try {
+      //通过rpc得到block地址
       return namenode.getBlockLocations(src, start, length);
     } catch(RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -947,6 +952,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   }
 
   /**
+   * 如果基础文件已加密，则将流包装在CryptoInputStream中。
    * Wraps the stream in a CryptoInputStream if the underlying file is
    * encrypted.
    */
@@ -1025,6 +1031,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
 
 
   /**
+   * 创建一个输入流为了获得datanode列表通过namenode，然后从所有正确的地方读取。创建完成正确的带外工作的InputStream的内部子类。
    * Create an input stream that obtains a nodelist from the
    * namenode, and then reads from all the right places.  Creates
    * inner subclass of InputStream that does the right out-of-band
@@ -1035,7 +1042,9 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     checkOpen();
     //    Get block info from namenode
     try (TraceScope ignored = newPathTraceScope("newDFSInputStream", src)) {
+      //获取块集合和文件长度
       LocatedBlocks locatedBlocks = getLocatedBlocks(src, 0);
+      //打开网络链接
       return openInternal(locatedBlocks, src, verifyChecksum);
     }
   }
@@ -1068,11 +1077,13 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   private DFSInputStream openInternal(LocatedBlocks locatedBlocks, String src,
       boolean verifyChecksum) throws IOException {
     if (locatedBlocks != null) {
+      //
       ErasureCodingPolicy ecPolicy = locatedBlocks.getErasureCodingPolicy();
       if (ecPolicy != null) {
         return new DFSStripedInputStream(this, src, verifyChecksum, ecPolicy,
             locatedBlocks);
       }
+      //输入流
       return new DFSInputStream(this, src, verifyChecksum, locatedBlocks);
     } else {
       throw new IOException("Cannot open filename " + src);
@@ -1193,6 +1204,11 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
         progress, buffersize, checksumOpt, null);
   }
 
+  /**
+   *
+   * @param permission
+   * @return
+   */
   private FsPermission applyUMask(FsPermission permission) {
     if (permission == null) {
       permission = FsPermission.getFileDefault();
@@ -1258,16 +1274,23 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       String ecPolicyName, String storagePolicy)
       throws IOException {
     checkOpen();
+    //申请fs权限
     final FsPermission masked = applyUMask(permission);
     LOG.debug("{}: masked={}", src, masked);
     final DFSOutputStream result = DFSOutputStream.newStreamForCreate(this,
         src, masked, flag, createParent, replication, blockSize, progress,
         dfsClientConf.createChecksum(checksumOpt),
         getFavoredNodesStr(favoredNodes), ecPolicyName, storagePolicy);
+    //开始文件租赁
     beginFileLease(result.getFileId(), result);
     return result;
   }
 
+  /**
+   * 格式化Nodes格式
+   * @param favoredNodes
+   * @return
+   */
   private String[] getFavoredNodesStr(InetSocketAddress[] favoredNodes) {
     String[] favoredNodeStrs = null;
     if (favoredNodes != null) {
@@ -3144,6 +3167,12 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     return saslClient;
   }
 
+  /**
+   * 创建新的路径trace scope
+   * @param description
+   * @param path
+   * @return
+   */
   TraceScope newPathTraceScope(String description, String path) {
     TraceScope scope = tracer.newScope(description);
     if (path != null) {

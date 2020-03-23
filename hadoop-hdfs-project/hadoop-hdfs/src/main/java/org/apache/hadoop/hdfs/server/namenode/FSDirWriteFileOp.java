@@ -348,7 +348,7 @@ class FSDirWriteFileOp {
 
   /**
    * Create a new file or overwrite an existing file<br>
-   *
+   * 创建新文件或者覆盖已经存在的文件
    * Once the file is create the client then allocates a new block with the next
    * call using {@link ClientProtocol#addBlock}.
    * <p>

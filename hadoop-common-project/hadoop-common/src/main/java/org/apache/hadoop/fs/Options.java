@@ -240,6 +240,7 @@ public final class Options {
 
   /**
    * This is used in FileSystem and FileContext to specify checksum options.
+   * 数据校验和参数
    */
   public static class ChecksumOpt {
     private final DataChecksum.Type checksumType;

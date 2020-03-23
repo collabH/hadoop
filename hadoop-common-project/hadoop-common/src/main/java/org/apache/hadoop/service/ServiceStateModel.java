@@ -109,9 +109,12 @@ public class ServiceStateModel {
    */
   public synchronized Service.STATE enterState(Service.STATE proposed) {
     checkStateTransition(name, state, proposed);
+    //初始化阶段的为NOTINITED
     Service.STATE oldState = state;
     //atomic write of the new state
+    //复制状态给服务的状态，并且返回老的状态
     state = proposed;
+    //NOTINITED
     return oldState;
   }
 

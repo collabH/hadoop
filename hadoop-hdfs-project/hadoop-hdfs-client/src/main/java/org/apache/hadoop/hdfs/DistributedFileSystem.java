@@ -320,18 +320,31 @@ public class DistributedFileSystem extends FileSystem
     }.resolve(this, absF);
   }
 
+  /**
+   * client通过DF通过RPC与namenode建立链接拿到datanode的地址块进行读取文件
+   * @param f the file name to open
+   * @param bufferSize the size of the buffer to be used.
+   * @return
+   * @throws IOException
+   */
   @Override
   public FSDataInputStream open(Path f, final int bufferSize)
       throws IOException {
+    //读取次数+1
     statistics.incrementReadOps(1);
+    //open操作+1
     storageStatistics.incrementOpCounter(OpType.OPEN);
+    //得到绝对路径
     Path absF = fixRelativePart(f);
+    //创建FileSystem链接解析器
     return new FileSystemLinkResolver<FSDataInputStream>() {
       @Override
       public FSDataInputStream doCall(final Path p) throws IOException {
+        //通过DFSClient客户端打开链接，rpc链接namenode得到datanode的block地址，然后读取文件
         final DFSInputStream dfsis =
             dfs.open(getPathName(p), bufferSize, verifyChecksum);
         try {
+          //创建包装输入流
           return dfs.createWrappedInputStream(dfsis);
         } catch (IOException ex){
           dfsis.close();
@@ -341,6 +354,7 @@ public class DistributedFileSystem extends FileSystem
       @Override
       public FSDataInputStream next(final FileSystem fs, final Path p)
           throws IOException {
+        //下一块读取
         return fs.open(p, bufferSize);
       }
     }.resolve(this, absF);
@@ -480,6 +494,19 @@ public class DistributedFileSystem extends FileSystem
     }.resolve(this, absF);
   }
 
+  /**
+   *
+   * @param f the file name to open
+   * @param permission file permission
+   * @param overwrite if a file with this name already exists, then if true,
+   *   the file will be overwritten, and if false an error will be thrown.
+   * @param bufferSize the size of the buffer to be used.
+   * @param replication required block replication for the file.
+   * @param blockSize block size
+   * @param progress the progress reporter 回调接口用于同志datanode的进度给app
+   * @return
+   * @throws IOException
+   */
   @Override
   public FSDataOutputStream create(Path f, FsPermission permission,
       boolean overwrite, int bufferSize, short replication, long blockSize,
@@ -540,8 +567,10 @@ public class DistributedFileSystem extends FileSystem
       final short replication, final long blockSize,
       final Progressable progress, final ChecksumOpt checksumOpt)
       throws IOException {
+    //修改统计指标
     statistics.incrementWriteOps(1);
     storageStatistics.incrementOpCounter(OpType.CREATE);
+    //得到绝对路径
     Path absF = fixRelativePart(f);
     return new FileSystemLinkResolver<FSDataOutputStream>() {
       @Override

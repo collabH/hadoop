@@ -49,6 +49,7 @@ public class DatanodeInfo extends DatanodeID implements Node {
   private long cacheCapacity;
   private long cacheUsed;
   private long lastUpdate;
+  //最后修改时间
   private long lastUpdateMonotonic;
   private int xceiverCount;
   private volatile String location = NetworkTopology.DEFAULT_RACK;

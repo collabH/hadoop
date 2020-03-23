@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Provides a way to access information about the map/reduce cluster.
+ * 提供一种访问有关map / reduce集群的信息的方法。
  */
 @InterfaceAudience.Public
 @InterfaceStability.Evolving

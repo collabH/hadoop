@@ -92,6 +92,15 @@ public class DFSStripedInputStream extends DFSInputStream {
   private final Set<String> warnedNodes =
       Collections.newSetFromMap(new ConcurrentHashMap<>());
 
+  /**
+   * 条状输入流
+   * @param dfsClient
+   * @param src
+   * @param verifyChecksum
+   * @param ecPolicy
+   * @param locatedBlocks
+   * @throws IOException
+   */
   DFSStripedInputStream(DFSClient dfsClient, String src,
       boolean verifyChecksum, ErasureCodingPolicy ecPolicy,
       LocatedBlocks locatedBlocks) throws IOException {

@@ -49,7 +49,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <code>GenericOptionsParser</code> is a utility to parse command line
- * arguments generic to the Hadoop framework. 
+ * arguments generic to the Hadoop framework.
+ *
+ * 用于解析hadoop的命令行命令
  * 
  * <code>GenericOptionsParser</code> recognizes several standard command
  * line arguments, enabling applications to easily specify a namenode, a 
@@ -116,8 +118,11 @@ public class GenericOptionsParser {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(GenericOptionsParser.class);
+  //配置
   private Configuration conf;
+  //cli
   private CommandLine commandLine;
+  //是否解析成功
   private final boolean parseSuccessful;
 
   /**
@@ -283,6 +288,7 @@ public class GenericOptionsParser {
    * @param line User-specified generic options
    */
   private void processGeneralOptions(CommandLine line) throws IOException {
+
     if (line.hasOption("fs")) {
       FileSystem.setDefaultUri(conf, line.getOptionValue("fs"));
     }
@@ -558,7 +564,7 @@ public class GenericOptionsParser {
   /**
    * Parse the user-specified options, get the generic options, and modify
    * configuration accordingly.
-   *
+   * 解析用户指定参数，得到一个通用的参数，修改相应的配置
    * @param opts Options to use for parsing args.
    * @param args User-specified arguments
    * @return true if the parse was successful

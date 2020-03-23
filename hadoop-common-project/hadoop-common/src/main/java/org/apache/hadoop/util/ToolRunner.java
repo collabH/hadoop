@@ -27,7 +27,7 @@ import org.apache.hadoop.ipc.CallerContext;
 
 /**
  * A utility to help run {@link Tool}s.
- * 
+ *  一个实用程序，可帮助运行{@link工具}。
  * <p><code>ToolRunner</code> can be used to run classes implementing 
  * <code>Tool</code> interface. It works in conjunction with 
  * {@link GenericOptionsParser} to parse the 

@@ -29,12 +29,15 @@ import java.util.Map;
 
 /**
  * Service LifeCycle.
+ * 服务的生命周期
  */
 @Public
 @Evolving
 public interface Service extends Closeable {
 
   /**
+   *
+   * 服务状态
    * Service states
    */
   public enum STATE {
@@ -86,13 +89,15 @@ public interface Service extends Closeable {
   }
 
   /**
+   * 初始化服务
    * Initialize the service.
    *
+   * 一定可以从NOTINITED状态过渡到INITED，除非这个操作失败和一个异常被抛出，在这种情况下必须调用stop()使服务进入STOPPED状态
    * The transition MUST be from {@link STATE#NOTINITED} to {@link STATE#INITED}
    * unless the operation failed and an exception was raised, in which case
    * {@link #stop()} MUST be invoked and the service enter the state
    * {@link STATE#STOPPED}.
-   * @param config the configuration of the service
+   * @param config the configuration of the service 服务的配置
    * @throws RuntimeException on any failure during the operation
 
    */

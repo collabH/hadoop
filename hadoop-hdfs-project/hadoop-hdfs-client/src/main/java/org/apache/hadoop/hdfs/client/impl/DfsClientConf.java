@@ -96,6 +96,7 @@ import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.Write;
 
 /**
  * DFSClient configuration.
+ * DFSClient客户端配置
  */
 public class DfsClientConf {
   private static final Logger LOG = LoggerFactory.getLogger(DfsClientConf
@@ -345,7 +346,7 @@ public class DfsClientConf {
     }
   }
 
-  // Construct a checksum option from conf
+  // Construct a checksum option from conf 得到默认的校验和参数配置
   public static ChecksumOpt getChecksumOptFromConf(Configuration conf) {
     DataChecksum.Type type = getChecksumType(conf);
     int bytesPerChecksum = conf.getInt(DFS_BYTES_PER_CHECKSUM_KEY,
@@ -353,7 +354,10 @@ public class DfsClientConf {
     return new ChecksumOpt(type, bytesPerChecksum);
   }
 
-  /** create a DataChecksum with the given option. */
+  /** create a DataChecksum with the given option.
+   *
+   *  创建一个数据校验和根据给定的参数
+   * */
   public DataChecksum createChecksum(ChecksumOpt userOpt) {
     // Fill in any missing field with the default.
     ChecksumOpt opt = ChecksumOpt.processChecksumOpt(

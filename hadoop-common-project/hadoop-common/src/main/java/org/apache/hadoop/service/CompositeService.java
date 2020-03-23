@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Composition of services.
+ * 服务的组建
  */
 @Public
 @Evolving

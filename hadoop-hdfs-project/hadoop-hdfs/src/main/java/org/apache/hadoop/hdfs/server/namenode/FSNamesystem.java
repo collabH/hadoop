@@ -2044,12 +2044,15 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     FSPermissionChecker.setOperationType(operationName);
     final INode inode;
     try {
+      //加读锁
       readLock();
       try {
         checkOperation(OperationCategory.READ);
+        //读取块地址
         res = FSDirStatAndListingOp.getBlockLocations(
             dir, pc, srcArg, offset, length, true);
         inode = res.getIIp().getLastINode();
+        //是否在安全模式
         if (isInSafeMode()) {
           for (LocatedBlock b : res.blocks.getLocatedBlocks()) {
             // if safemode & no block locations yet then throw safemodeException
@@ -2084,6 +2087,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
 
     logAuditEvent(true, operationName, srcArg);
 
+    //写
     if (!isInSafeMode() && res.updateAccessTime()) {
       String src = srcArg;
       checkOperation(OperationCategory.WRITE);
@@ -2113,6 +2117,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     }
 
     LocatedBlocks blocks = res.blocks;
+    //排序找到client机器网络拓扑最近的datanode
     sortLocatedBlocks(clientMachine, blocks);
     return blocks;
   }
@@ -2124,6 +2129,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
         // simply return, block list is empty
         return;
       }
+      //sort
       blockManager.getDatanodeManager().sortLocatedBlocks(clientMachine,
           blkList);
 
@@ -2522,7 +2528,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
 
   /**
    * Create a new file entry in the namespace.
-   * 
+   *  创建一个新的文件在namespace中
    * For description of parameters and exceptions thrown see
    * {@link ClientProtocol#create}, except it returns valid file status upon
    * success
@@ -2546,6 +2552,23 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     return status;
   }
 
+  /**
+   * 开始文件输入创建
+   * @param src
+   * @param permissions
+   * @param holder
+   * @param clientMachine
+   * @param flag
+   * @param createParent
+   * @param replication
+   * @param blockSize
+   * @param supportedVersions
+   * @param ecPolicyName
+   * @param storagePolicy
+   * @param logRetryCache
+   * @return
+   * @throws IOException
+   */
   private HdfsFileStatus startFileInt(String src,
       PermissionStatus permissions, String holder, String clientMachine,
       EnumSet<CreateFlag> flag, boolean createParent, short replication,
@@ -2573,6 +2596,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
       throw new InvalidPathException(src);
     }
 
+    //是否启用副本
     boolean shouldReplicate = flag.contains(CreateFlag.SHOULD_REPLICATE);
     if (shouldReplicate &&
         (!org.apache.commons.lang3.StringUtils.isEmpty(ecPolicyName))) {
@@ -2581,8 +2605,10 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     }
 
     INodesInPath iip = null;
+    //跳过同步
     boolean skipSync = true; // until we do something that might create edits
     HdfsFileStatus stat = null;
+    //移除的块
     BlocksMapUpdateInfo toRemoveBlocks = null;
 
     checkOperation(OperationCategory.WRITE);
@@ -2604,6 +2630,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
       }
 
       if (shouldReplicate) {
+        //校验副本
         blockManager.verifyReplication(src, replication, clientMachine);
       } else {
         final ErasureCodingPolicy ecPolicy = FSDirErasureCodingOp
@@ -2620,6 +2647,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
         }
       }
 
+      //加密文件信息
       FileEncryptionInfo feInfo = null;
       if (!iip.isRaw() && provider != null) {
         EncryptionKeyInfo ezInfo = FSDirEncryptionZoneOp.getEncryptionKeyInfo(
@@ -2640,6 +2668,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
       toRemoveBlocks = new BlocksMapUpdateInfo();
       dir.writeLock();
       try {
+        //创建文件
         stat = FSDirWriteFileOp.startFile(this, iip, permissions, holder,
             clientMachine, flag, createParent, replication, blockSize, feInfo,
             toRemoveBlocks, shouldReplicate, ecPolicyName, storagePolicy,

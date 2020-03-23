@@ -211,6 +211,7 @@ public class SequenceFile {
   private static final byte BLOCK_COMPRESS_VERSION = (byte)4;
   private static final byte CUSTOM_COMPRESS_VERSION = (byte)5;
   private static final byte VERSION_WITH_METADATA = (byte)6;
+  //顺序文件代码
   private static byte[] VERSION = new byte[] {
     (byte)'S', (byte)'E', (byte)'Q', VERSION_WITH_METADATA
   };
