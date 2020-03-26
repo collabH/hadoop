@@ -146,7 +146,7 @@ public abstract class CombineFileInputFormat<K, V>
    */
   @InterfaceAudience.Private
   @Override
-  protected boolean isSplitable(JobContext context, Path file) {
+  protected boolean  isSplitable(JobContext context, Path file) {
     try {
       return isSplitable(FileSystem.get(context.getConfiguration()), file);
     }

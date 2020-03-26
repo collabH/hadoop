@@ -25,19 +25,30 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /** Default {@link MapRunnable} implementation.*/
+
+/**
+ * 默认的MapRunnable实现
+ * @param <K1>
+ * @param <V1>
+ * @param <K2>
+ * @param <V2>
+ */
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 public class MapRunner<K1, V1, K2, V2>
     implements MapRunnable<K1, V1, K2, V2> {
   
   private Mapper<K1, V1, K2, V2> mapper;
+  //是否开启增量计数
   private boolean incrProcCount;
 
   @SuppressWarnings("unchecked")
   public void configure(JobConf job) {
+    //反射得到mapper类型
     this.mapper = ReflectionUtils.newInstance(job.getMapperClass(), job);
     //increment processed counter only if skipping feature is enabled
-    this.incrProcCount = SkipBadRecords.getMapperMaxSkipRecords(job)>0 && 
+    //仅当启用了跳过功能时，递增处理的计数器
+    this.incrProcCount = SkipBadRecords.getMapperMaxSkipRecords(job)>0 &&
       SkipBadRecords.getAutoIncrMapperProcCount(job);
   }
 
@@ -48,9 +59,10 @@ public class MapRunner<K1, V1, K2, V2>
       // allocate key & value instances that are re-used for all entries
       K1 key = input.createKey();
       V1 value = input.createValue();
-      
+      //是否能够读取下一行
       while (input.next(key, value)) {
         // map pair to output
+        //丢入mapper函数
         mapper.map(key, value, output, reporter);
         if(incrProcCount) {
           reporter.incrCounter(SkipBadRecords.COUNTER_GROUP, 

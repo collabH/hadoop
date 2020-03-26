@@ -44,6 +44,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *
+ * 一个命令行工具为了回调HAServiceProtocol。
+ * 例如，。 这可以用来强制服务，待机或活动模式，或触发一个健康检查。
  * A command-line tool for making calls in the HAServiceProtocol.
  * For example,. this can be used to force a service to standby or active
  * mode, or to trigger a health-check.
@@ -59,11 +62,14 @@ public abstract class HAAdmin extends Configured implements Tool {
    * state transitions even when auto-failover is enabled. This is an unsafe
    * operation, which is why it is not documented in the usage below.
    */
+  //无证标志，它允许启用了自动故障转移时，管理员甚至可以使用手动故障转移状态转换。 这是一个不安全的操作，这就是为什么它不是在下面的使用记录。
   protected static final String FORCEMANUAL = "forcemanual";
   private static final Logger LOG = LoggerFactory.getLogger(HAAdmin.class);
 
+  //rpc调用超时校验
   private int rpcTimeoutForChecks = -1;
-  
+
+  //ha支持参数
   protected final static Map<String, UsageInfo> USAGE =
     ImmutableMap.<String, UsageInfo>builder()
     .put("-transitionToActive",
@@ -86,6 +92,7 @@ public abstract class HAAdmin extends Configured implements Tool {
   /** Output stream for errors, for use in tests */
   protected PrintStream errOut = System.err;
   protected PrintStream out = System.out;
+  //默认请求通过user
   private RequestSource requestSource = RequestSource.REQUEST_BY_USER;
 
   protected RequestSource getRequestSource() {
@@ -534,6 +541,7 @@ public abstract class HAAdmin extends Configured implements Tool {
 
   /**
    * UsageInfo class holds args and help details.
+   * UsageInfo类包含指定参数和帮助的细节
    */
   public static class UsageInfo {
     public final String args;

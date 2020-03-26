@@ -33,6 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *
+ * 所述FailOverController是负责在启动时选举活动的服务时，或者当当前的活动正在改变（例如由于故障），监控服务的运行状况，
+ * 并进行故障切换时一个新的有效服务是或者由用户手动选择或当选
+ *
  * The FailOverController is responsible for electing an active service
  * on startup or when the current active is changing (eg due to failure),
  * monitoring the health of a service, and performing a fail-over when a
@@ -45,17 +49,21 @@ public class FailoverController {
   private static final Logger LOG =
       LoggerFactory.getLogger(FailoverController.class);
 
+  //优雅的超时
   private final int gracefulFenceTimeout;
+  //新活跃的rpc超时时间
   private final int rpcTimeoutToNewActive;
-  
+
+  //hadoop配置
   private final Configuration conf;
   /*
-   * Need a copy of conf for graceful fence to set 
+   * Need a copy of conf for graceful fence to set
    * configurable retries for IPC client.
    * Refer HDFS-3561
    */
   private final Configuration gracefulFenceConf;
 
+  //请求源
   private final RequestSource requestSource;
   
   public FailoverController(Configuration conf,
@@ -66,8 +74,8 @@ public class FailoverController {
     
     this.gracefulFenceTimeout = getGracefulFenceTimeout(conf);
     this.rpcTimeoutToNewActive = getRpcTimeoutToNewActive(conf);
-    
-    //Configure less retries for graceful fence 
+
+    //Configure less retries for graceful fence 优雅栏栅链接重试次数
     int gracefulFenceConnectRetries = conf.getInt(
         CommonConfigurationKeys.HA_FC_GRACEFUL_FENCE_CONNECTION_RETRIES,
         CommonConfigurationKeys.HA_FC_GRACEFUL_FENCE_CONNECTION_RETRIES_DEFAULT);
@@ -92,18 +100,21 @@ public class FailoverController {
   }
   
   /**
+   * 在给定的服务，我们计划故障转移，如进行预故障检查，以防止故障转移到服务（例如，由于它是无法访问的，已经激活，不是健康的，等等）。
+   *
    * Perform pre-failover checks on the given service we plan to
    * failover to, eg to prevent failing over to a service (eg due
    * to it being inaccessible, already active, not healthy, etc).
-   *
+   * 选择忽略toSvc如果它声称它是没有准备好成为案件提供了进行故障转移将使得它成为活跃的，
+   * 例如，因为它触发一个日志回滚所以待机可以了解新的块和假安全模式活跃。
    * An option to ignore toSvc if it claims it is not ready to
    * become active is provided in case performing a failover will
    * allow it to become active, eg because it triggers a log roll
    * so the standby can learn about new blocks and leave safemode.
    *
-   * @param from currently active service
-   * @param target service to make active
-   * @param forceActive ignore toSvc if it reports that it is not ready
+   * @param from currently active service 当前活跃服务
+   * @param target service to make active 使其变成新的活跃的服务
+   * @param forceActive ignore toSvc if it reports that it is not ready 是否忽略toSrv如果它报告他还没准备好
    * @throws FailoverFailedException if we should avoid failover
    */
   private void preFailoverChecks(HAServiceTarget from,

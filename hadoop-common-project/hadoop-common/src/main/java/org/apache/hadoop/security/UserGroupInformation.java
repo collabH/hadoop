@@ -304,11 +304,13 @@ public class UserGroupInformation {
   }
 
   /**
+   * 初始化UGI和相关类
    * Initialize UGI and related classes.
    * @param conf the configuration to use
    */
   private static synchronized void initialize(Configuration conf,
                                               boolean overrideNameRules) {
+    //得到认证方法
     authenticationMethod = SecurityUtil.getAuthenticationMethod(conf);
     if (overrideNameRules || !HadoopKerberosName.hasRulesBeenSet()) {
       try {
@@ -651,6 +653,7 @@ public class UserGroupInformation {
   @InterfaceAudience.Public
   @InterfaceStability.Evolving
   public static UserGroupInformation getLoginUser() throws IOException {
+    //确证初始化
     ensureInitialized();
     UserGroupInformation loginUser = loginUserRef.get();
     // a potential race condition exists only for the initial creation of
@@ -706,6 +709,12 @@ public class UserGroupInformation {
     setLoginUser(createLoginUser(subject));
   }
 
+  /**
+   * 创建登陆用户
+   * @param subject
+   * @return
+   * @throws IOException
+   */
   private static
   UserGroupInformation createLoginUser(Subject subject) throws IOException {
     UserGroupInformation realUser = doSubjectLogin(subject, null);

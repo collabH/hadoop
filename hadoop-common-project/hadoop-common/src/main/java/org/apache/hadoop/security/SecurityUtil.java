@@ -694,6 +694,7 @@ public final class SecurityUtil {
   }
 
   public static AuthenticationMethod getAuthenticationMethod(Configuration conf) {
+    //默认为simple
     String value = conf.get(HADOOP_SECURITY_AUTHENTICATION, "simple");
     try {
       return Enum.valueOf(AuthenticationMethod.class,

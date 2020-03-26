@@ -24,6 +24,7 @@ import org.apache.hadoop.util.Progressable;
 
 /**
  * The context for task attempts.
+ * 任务重试上下文
  */
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
@@ -31,21 +32,25 @@ public interface TaskAttemptContext extends JobContext, Progressable {
 
   /**
    * Get the unique name for this task attempt.
+   * 得到这个重试任务的唯一名称
    */
   public TaskAttemptID getTaskAttemptID();
 
   /**
    * Set the current status of the task to the given string.
+   * 设置当前任务的状态通过给定的字符串
    */
   public void setStatus(String msg);
 
   /**
+   * 得到最后设置的状态消息
    * Get the last set status message.
    * @return the current status message
    */
   public String getStatus();
   
   /**
+   * 当前重试任务的进度
    * The current progress of the task attempt.
    * @return a number between 0.0 and 1.0 (inclusive) indicating the attempt's
    * progress.

@@ -54,6 +54,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
   /** 
    * Name of directory where pending data is placed.  Data that has not been
    * committed yet.
+   * 目录的名称，其中待处理的数据被放置。 已未提交的数据
    */
   public static final String PENDING_DIR_NAME = "_temporary";
   /**
@@ -63,15 +64,20 @@ public class FileOutputCommitter extends PathOutputCommitter {
    */
   @Deprecated
   protected static final String TEMP_DIR_NAME = PENDING_DIR_NAME;
+  // 成功的文件名称
   public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
+  //成功作业输出录标记
   public static final String SUCCESSFUL_JOB_OUTPUT_DIR_MARKER =
       "mapreduce.fileoutputcommitter.marksuccessfuljobs";
+  //文件输出提交器算法版本
   public static final String FILEOUTPUTCOMMITTER_ALGORITHM_VERSION =
       "mapreduce.fileoutputcommitter.algorithm.version";
   public static final int FILEOUTPUTCOMMITTER_ALGORITHM_VERSION_DEFAULT = 2;
   // Skip cleanup _temporary folders under job's output directory
+  //跳过作业输出目录下的清理_temporary文件夹
   public static final String FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED =
       "mapreduce.fileoutputcommitter.cleanup.skipped";
+  //默认为false
   public static final boolean
       FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED_DEFAULT = false;
 
@@ -94,6 +100,12 @@ public class FileOutputCommitter extends PathOutputCommitter {
   // HDFS has O(1) recursive delete, so this parameter is left false by default.
   // Users of object stores, for example, may want to set this to true. Note:
   // this is only used if mapreduce.fileoutputcommitter.algorithm.version=2
+  //任务是否应删除其任务临时目录。这是
+  //纯粹是对没有O（1）递归删除的文件系统的优化，例如
+  // commitJob将递归删除整个作业临时目录。
+  // HDFS具有O（1）递归删除，因此默认情况下此参数为false。
+  //例如，对象存储库的用户可能要将其设置为true。注意：
+  //仅在mapreduce.fileoutputcommitter.algorithm.version = 2时使用
   public static final String FILEOUTPUTCOMMITTER_TASK_CLEANUP_ENABLED =
       "mapreduce.fileoutputcommitter.task.cleanup.enabled";
   public static final boolean
@@ -135,6 +147,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
                              JobContext context) throws IOException {
     super(outputPath, context);
     Configuration conf = context.getConfiguration();
+    //文件输出提交器算法版本
     algorithmVersion =
         conf.getInt(FILEOUTPUTCOMMITTER_ALGORITHM_VERSION,
                     FILEOUTPUTCOMMITTER_ALGORITHM_VERSION_DEFAULT);
@@ -269,6 +282,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
   }
   
   /**
+   * 计算其中一个任务尝试的输出被存储，直到任务是致力于路径
    * Compute the path where the output of a task attempt is stored until
    * that task is committed.
    * 
@@ -313,7 +327,9 @@ public class FileOutputCommitter extends PathOutputCommitter {
         String.valueOf(context.getTaskAttemptID().getTaskID()));
   }
 
+  //commit任务过滤器
   private static class CommittedTaskFilter implements PathFilter {
+    //过滤_temporary
     @Override
     public boolean accept(Path path) {
       return !PENDING_DIR_NAME.equals(path.getName());
@@ -321,6 +337,8 @@ public class FileOutputCommitter extends PathOutputCommitter {
   }
 
   /**
+   *
+   * 获取存储已落实任务的输出的所有路径的列表。
    * Get a list of all paths where output from committed tasks are stored.
    * @param context the context of the current job
    * @return the list of these Paths/FileStatuses. 
@@ -330,6 +348,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
     throws IOException {
     Path jobAttemptPath = getJobAttemptPath(context);
     FileSystem fs = jobAttemptPath.getFileSystem(context.getConfiguration());
+    //过滤_temporary
     return fs.listStatus(jobAttemptPath, new CommittedTaskFilter());
   }
 
@@ -343,15 +362,18 @@ public class FileOutputCommitter extends PathOutputCommitter {
   }
 
   /**
+   * 创建的临时目录这是所有任务的工作目录的根目录。
    * Create the temporary directory that is the root of all of the task 
    * work directories.
    * @param context the job's context
    */
   public void setupJob(JobContext context) throws IOException {
     if (hasOutputPath()) {
+      //得到作业重试路径
       Path jobAttemptPath = getJobAttemptPath(context);
       FileSystem fs = jobAttemptPath.getFileSystem(
           context.getConfiguration());
+      //创建作业重试路径
       if (!fs.mkdirs(jobAttemptPath)) {
         LOG.error("Mkdirs failed to create " + jobAttemptPath);
       }
@@ -361,11 +383,13 @@ public class FileOutputCommitter extends PathOutputCommitter {
   }
 
   /**
+   * 作业已经完成，所以工作在commitJobInternal。 如果使用算法2失败可能会重试
    * The job has completed, so do works in commitJobInternal().
    * Could retry on failure if using algorithm 2.
    * @param context the job's context
    */
   public void commitJob(JobContext context) throws IOException {
+    //如果为算法2，最大失败重试次数
     int maxAttemptsOnFailure = isCommitJobRepeatable(context) ?
         context.getConfiguration().getInt(FILEOUTPUTCOMMITTER_FAILURE_ATTEMPTS,
             FILEOUTPUTCOMMITTER_FAILURE_ATTEMPTS_DEFAULT) : 1;
@@ -387,9 +411,13 @@ public class FileOutputCommitter extends PathOutputCommitter {
   }
 
   /**
+   * 作业完成时，跟随提交工作
    * The job has completed, so do following commit job, include:
+   * 移动全部提交的任务在最终的输出目录中只有算法为1时
    * Move all committed tasks to the final output dir (algorithm 1 only).
+   * //删除temporary目录，包含工作目录的全部
    * Delete the temporary directory, including all of the work directories.
+   * //创建_SUCCESS文件代表创建成功
    * Create a _SUCCESS file to make it as successful.
    * @param context the job's context
    */
@@ -399,8 +427,11 @@ public class FileOutputCommitter extends PathOutputCommitter {
       Path finalOutput = getOutputPath();
       FileSystem fs = finalOutput.getFileSystem(context.getConfiguration());
 
+      //如果算法版本为1
       if (algorithmVersion == 1) {
+        //得到全部的提交任务路径
         for (FileStatus stat: getAllCommittedTaskPaths(context)) {
+          //合并路径
           mergePaths(fs, stat, finalOutput, context);
         }
       }
@@ -445,6 +476,8 @@ public class FileOutputCommitter extends PathOutputCommitter {
   }
 
   /**
+   *
+   * 合并两个路径在一起。 凡是从将被转移到到，如果有任何名称冲突，而合并从赢的文件或目录。
    * Merge two paths together.  Anything in from will be moved into to, if there
    * are any name conflicts while merging the files or directories in from win.
    * @param fs the File System to use
@@ -495,6 +528,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
     }
   }
 
+  //上报进度
   private void reportProgress(JobContext context) {
     if (context instanceof Progressable) {
       ((Progressable) context).progress();

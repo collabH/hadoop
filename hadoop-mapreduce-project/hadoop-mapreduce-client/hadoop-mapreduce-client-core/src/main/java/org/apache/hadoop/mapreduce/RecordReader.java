@@ -25,6 +25,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
 /**
+ *记录读取器将数据分为键/值对，以输入到Mapper中
  * The record reader breaks the data into key/value pairs for input to the
  * {@link Mapper}.
  * @param <KEYIN>
@@ -36,6 +37,7 @@ public abstract class RecordReader<KEYIN, VALUEIN> implements Closeable {
 
   /**
    * Called once at initialization.
+   * 在初始化时调用一次。
    * @param split the split that defines the range of records to read
    * @param context the information about the task
    * @throws IOException

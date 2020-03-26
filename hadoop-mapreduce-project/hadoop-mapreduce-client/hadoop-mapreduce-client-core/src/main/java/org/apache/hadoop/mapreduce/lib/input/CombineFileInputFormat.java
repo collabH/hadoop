@@ -57,6 +57,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
 /**
+ * 将多个文件合并成一个分片
  * An abstract {@link InputFormat} that returns {@link CombineFileSplit}'s in 
  * {@link InputFormat#getSplits(JobContext)} method. 
  * 

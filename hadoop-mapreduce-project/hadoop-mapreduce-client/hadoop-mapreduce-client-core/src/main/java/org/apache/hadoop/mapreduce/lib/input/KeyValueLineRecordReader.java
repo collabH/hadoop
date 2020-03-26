@@ -61,12 +61,14 @@ public class KeyValueLineRecordReader extends RecordReader<Text, Text> {
     throws IOException {
     
     lineRecordReader = new LineRecordReader();
+    //默认分隔符\t
     String sepStr = conf.get(KEY_VALUE_SEPARATOR, "\t");
     this.separator = (byte) sepStr.charAt(0);
   }
 
   public void initialize(InputSplit genericSplit,
       TaskAttemptContext context) throws IOException {
+    //初始化数据
     lineRecordReader.initialize(genericSplit, context);
   }
   

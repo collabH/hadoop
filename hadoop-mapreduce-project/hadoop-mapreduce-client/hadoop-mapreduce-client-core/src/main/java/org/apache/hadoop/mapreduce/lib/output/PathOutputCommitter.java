@@ -32,6 +32,9 @@ import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 /**
+ *
+ * 在这在某种程度上承诺写入工作目录到最后的目录数据的提交者提交过程。
+ * 这样做的参考实现是FileOutputCommitter 。 有两个构造，这两个做什么，但长和验证他们的论点
  * A committer which somehow commits data written to a working directory
  * to the final directory during the commit process. The reference
  * implementation of this is the {@link FileOutputCommitter}.
@@ -45,9 +48,11 @@ public abstract class PathOutputCommitter extends OutputCommitter {
   private static final Logger LOG =
       LoggerFactory.getLogger(PathOutputCommitter.class);
 
+  //作业上下文
   private final JobContext context;
 
   /**
+   * 构造一个任务重试上下文
    * Constructor for a task attempt.
    * Subclasses should provide a public constructor with this signature.
    * @param outputPath output path: may be null
@@ -76,6 +81,7 @@ public abstract class PathOutputCommitter extends OutputCommitter {
   }
 
   /**
+   * 得到最终的目录，一旦作业被提交的工作将被放置。 这可能是空，在这种情况下，就没有将数据写入到输出路径
    * Get the final directory where work will be placed once the job
    * is committed. This may be null, in which case, there is no output
    * path to write data to.
@@ -84,6 +90,7 @@ public abstract class PathOutputCommitter extends OutputCommitter {
   public abstract Path getOutputPath();
 
   /**
+   * 是否存在输出路径
    * Predicate: is there an output path?
    * @return true if we have an output path set, else false.
    */
@@ -92,6 +99,9 @@ public abstract class PathOutputCommitter extends OutputCommitter {
   }
 
   /**
+   *
+   * 获取该任务应该写结果到目录中。
+   * 警告：没有保证，这项工作路径是在同一个FS作为最终输出，或者说，它是跨机器可见。 可以为空
    * Get the directory that the task should write results into.
    * Warning: there's no guarantee that this work path is on the same
    * FS as the final output, or that it's visible across machines.

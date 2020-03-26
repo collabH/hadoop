@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 
 /**
  * This class defines a FileStatus that includes a file's block locations.
+ * 此类定义了FileStatus，其中包括文件的块位置。
  */
 @InterfaceAudience.Public
 @InterfaceStability.Evolving

@@ -91,6 +91,7 @@ public class ToolRunner {
   }
   
   /**
+   * 打印常规命令行参数和用法信息。
    * Prints generic command-line argurments and usage information.
    * 
    *  @param out stream to write usage information to.

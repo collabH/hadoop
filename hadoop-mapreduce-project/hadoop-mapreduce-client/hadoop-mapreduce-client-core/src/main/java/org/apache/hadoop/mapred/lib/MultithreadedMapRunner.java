@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.concurrent.*;
 
 /**
+ * 多线程方式实现MapRunnable
  * Multithreaded implementation for {@link MapRunnable}.
  * <p>
  * It can be used instead of the default implementation,
@@ -60,15 +61,21 @@ public class MultithreadedMapRunner<K1, V1, K2, V2>
   private static final Logger LOG =
       LoggerFactory.getLogger(MultithreadedMapRunner.class.getName());
 
+  //任务配置
   private JobConf job;
+  //mapper
   private Mapper<K1, V1, K2, V2> mapper;
+  //线程池
   private ExecutorService executorService;
+  //异常
   private volatile IOException ioException;
+  //异常
   private volatile RuntimeException runtimeException;
   private boolean incrProcCount;
 
   @SuppressWarnings("unchecked")
   public void configure(JobConf jobConf) {
+    //得到线程数
     int numberOfThreads =
       jobConf.getInt(MultithreadedMapper.NUM_THREADS, 10);
     if (LOG.isDebugEnabled()) {
@@ -85,6 +92,7 @@ public class MultithreadedMapRunner<K1, V1, K2, V2>
 
     // Creating a threadpool of the configured size to execute the Mapper
     // map method in parallel.
+    //这个配置是否可行
     executorService = new HadoopThreadPoolExecutor(numberOfThreads,
         numberOfThreads,
                                              0L, TimeUnit.MILLISECONDS,

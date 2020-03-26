@@ -67,7 +67,7 @@ import com.google.common.collect.Lists;
 public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
   public static final String INPUT_DIR = 
     "mapreduce.input.fileinputformat.inputdir";
-  public static final String SPLIT_MAXSIZE = 
+  public static final String SPLIT_MAXSIZE =
     "mapreduce.input.fileinputformat.split.maxsize";
   public static final String SPLIT_MINSIZE = 
     "mapreduce.input.fileinputformat.split.minsize";
@@ -93,6 +93,9 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
     BYTES_READ
   }
 
+  /**
+   * 默认根据_或.的文件来过滤
+   */
   private static final PathFilter hiddenFileFilter = new PathFilter(){
       public boolean accept(Path p){
         String name = p.getName(); 
@@ -123,6 +126,7 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
   }
   
   /**
+   * 设置一个输入目录
    * @param job
    *          the job to modify
    * @param inputDirRecursive
@@ -248,12 +252,13 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
    */
   protected List<FileStatus> listStatus(JobContext job
                                         ) throws IOException {
+    //得到输入路径
     Path[] dirs = getInputPaths(job);
     if (dirs.length == 0) {
       throw new IOException("No input paths specified in job");
     }
     
-    // get tokens for all the required FileSystems..
+    // get tokens for all the required FileSystems..获取所有必需的文件系统的令牌。
     TokenCache.obtainTokensForNamenodes(job.getCredentials(), dirs, 
                                         job.getConfiguration());
 
@@ -396,35 +401,48 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
    */
   public List<InputSplit> getSplits(JobContext job) throws IOException {
     StopWatch sw = new StopWatch().start();
+    //得到最小的分片大小
     long minSize = Math.max(getFormatMinSplitSize(), getMinSplitSize(job));
+    //得到最大分片大小
     long maxSize = getMaxSplitSize(job);
 
     // generate splits
     List<InputSplit> splits = new ArrayList<InputSplit>();
+    //得到文件信息
     List<FileStatus> files = listStatus(job);
 
+    //是否忽略子目录
     boolean ignoreDirs = !getInputDirRecursive(job)
       && job.getConfiguration().getBoolean(INPUT_DIR_NONRECURSIVE_IGNORE_SUBDIRS, false);
     for (FileStatus file: files) {
+      //过滤目录
       if (ignoreDirs && file.isDirectory()) {
         continue;
       }
+      //文件路径
       Path path = file.getPath();
+      //文件长度
       long length = file.getLen();
       if (length != 0) {
+        //块路径
         BlockLocation[] blkLocations;
+        //文件状态路径
         if (file instanceof LocatedFileStatus) {
           blkLocations = ((LocatedFileStatus) file).getBlockLocations();
         } else {
           FileSystem fs = path.getFileSystem(job.getConfiguration());
           blkLocations = fs.getFileBlockLocations(file, 0, length);
         }
+        //是否需要分片
         if (isSplitable(job, path)) {
+          //块大小
           long blockSize = file.getBlockSize();
+          //分片大小
           long splitSize = computeSplitSize(blockSize, minSize, maxSize);
 
           long bytesRemaining = length;
           while (((double) bytesRemaining)/splitSize > SPLIT_SLOP) {
+            //得到块索引
             int blkIndex = getBlockIndex(blkLocations, length-bytesRemaining);
             splits.add(makeSplit(path, length-bytesRemaining, splitSize,
                         blkLocations[blkIndex].getHosts(),
@@ -464,11 +482,24 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
     return splits;
   }
 
+  /**
+   * 计算分片大小
+   * @param blockSize 块的大小
+   * @param minSize 最小分配大小
+   * @param maxSize 最大分配大小
+   * @return
+   */
   protected long computeSplitSize(long blockSize, long minSize,
                                   long maxSize) {
     return Math.max(minSize, Math.min(maxSize, blockSize));
   }
 
+  /**
+   * 得到块索引
+   * @param blkLocations 块路径
+   * @param offset 偏移
+   * @return
+   */
   protected int getBlockIndex(BlockLocation[] blkLocations, 
                               long offset) {
     for (int i = 0 ; i < blkLocations.length; i++) {
@@ -602,6 +633,7 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
    */
   public static Path[] getInputPaths(JobContext context) {
     String dirs = context.getConfiguration().get(INPUT_DIR, "");
+    //以逗号分割
     String [] list = StringUtils.split(dirs);
     Path[] result = new Path[list.length];
     for (int i = 0; i < list.length; i++) {

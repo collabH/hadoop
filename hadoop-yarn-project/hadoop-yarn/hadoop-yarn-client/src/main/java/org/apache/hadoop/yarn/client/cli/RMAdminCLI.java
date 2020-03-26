@@ -86,6 +86,9 @@ import com.google.common.collect.ImmutableMap;
 
 import static org.apache.hadoop.yarn.client.util.YarnClientUtils.NO_LABEL_ERR_MSG;
 
+/**
+ * RM管理客户端继承HA客户端
+ */
 @Private
 @Unstable
 public class RMAdminCLI extends HAAdmin {
@@ -184,6 +187,10 @@ public class RMAdminCLI extends HAAdmin {
     this.out = out;
   }
 
+  /**
+   * 追加HA参数用例
+   * @param usageBuilder
+   */
   private static void appendHAUsage(final StringBuilder usageBuilder) {
     for (Map.Entry<String,UsageInfo> cmdEntry : USAGE.entrySet()) {
       if (cmdEntry.getKey().equals("-help")) {
@@ -701,12 +708,15 @@ public class RMAdminCLI extends HAAdmin {
 
   @Override
   public int run(String[] args) throws Exception {
+
     YarnConfiguration yarnConf =
         getConf() == null ? new YarnConfiguration() : new YarnConfiguration(
             getConf());
+    //RM ha开关，默认关闭
     boolean isHAEnabled =
         yarnConf.getBoolean(YarnConfiguration.RM_HA_ENABLED,
             YarnConfiguration.DEFAULT_RM_HA_ENABLED);
+
 
     if (args.length < 1) {
       printUsage("", isHAEnabled);
@@ -728,6 +738,7 @@ public class RMAdminCLI extends HAAdmin {
     }
 
     if (USAGE.containsKey(cmd)) {
+      //开启ha使用
       if (isHAEnabled) {
         return super.run(args);
       }

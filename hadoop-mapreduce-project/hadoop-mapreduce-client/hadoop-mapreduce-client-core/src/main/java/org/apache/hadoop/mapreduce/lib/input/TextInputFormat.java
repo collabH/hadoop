@@ -45,6 +45,7 @@ public class TextInputFormat extends FileInputFormat<LongWritable, Text> {
   public RecordReader<LongWritable, Text> 
     createRecordReader(InputSplit split,
                        TaskAttemptContext context) {
+    //得到值分隔符
     String delimiter = context.getConfiguration().get(
         "textinputformat.record.delimiter");
     byte[] recordDelimiterBytes = null;

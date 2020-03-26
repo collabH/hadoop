@@ -342,7 +342,7 @@ public class Cluster {
   /**
    * Grab the jobtracker's view of the staging directory path where 
    * job-specific files will  be placed.
-   * 
+   * 抓住暂存目录路径的jobtracker视图，在该暂存目录路径中将放置特定于作业的文件。
    * @return the staging directory where job-specific files are to be placed.
    */
   public Path getStagingAreaDir() throws IOException, InterruptedException {

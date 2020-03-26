@@ -73,6 +73,7 @@ class JobSubmitter {
   private static final String SHUFFLE_KEYGEN_ALGORITHM = "HmacSHA1";
   private static final int SHUFFLE_KEY_LENGTH = 64;
   private FileSystem jtFs;
+  //rpc客户端
   private ClientProtocol submitClient;
   private String submitHostName;
   private String submitHostAddress;
@@ -139,14 +140,18 @@ class JobSubmitter {
   JobStatus submitJobInternal(Job job, Cluster cluster) 
   throws ClassNotFoundException, InterruptedException, IOException {
 
-    //validate the jobs output specs 
+    //validate the jobs output specs
+    //校验job的输出
     checkSpecs(job);
 
     Configuration conf = job.getConfiguration();
-    addMRFrameworkToDistributedCache(conf);
 
+    addMRFrameworkToDistributedCache(conf);
+    //得到任务暂存区域路径
     Path jobStagingArea = JobSubmissionFiles.getStagingDir(cluster, conf);
     //configure the command line options correctly on the submitting dfs
+    //在提交的dfs上正确配置命令行选项
+    //得到本地套接字信息
     InetAddress ip = InetAddress.getLocalHost();
     if (ip != null) {
       submitHostAddress = ip.getHostAddress();
@@ -154,8 +159,10 @@ class JobSubmitter {
       conf.set(MRJobConfig.JOB_SUBMITHOST,submitHostName);
       conf.set(MRJobConfig.JOB_SUBMITHOSTADDR,submitHostAddress);
     }
+    //得到一个新的jobId
     JobID jobId = submitClient.getNewJobID();
     job.setJobID(jobId);
+    //创建提交的job目录路径
     Path submitJobDir = new Path(jobStagingArea, jobId.toString());
     JobStatus status = null;
     try {
@@ -264,7 +271,14 @@ class JobSubmitter {
       }
     }
   }
-  
+
+  /**
+   * 校验job的specs
+   * @param job
+   * @throws ClassNotFoundException
+   * @throws InterruptedException
+   * @throws IOException
+   */
   private void checkSpecs(Job job) throws ClassNotFoundException, 
       InterruptedException, IOException {
     JobConf jConf = (JobConf)job.getConfiguration();
@@ -433,9 +447,15 @@ class JobSubmitter {
     }
   }
 
+  /**
+   * 添加MapReduce框架到分布式缓存
+   * @param conf
+   * @throws IOException
+   */
   @SuppressWarnings("deprecation")
   private static void addMRFrameworkToDistributedCache(Configuration conf)
       throws IOException {
+    //拿到mapreduce框架路径
     String framework =
         conf.get(MRJobConfig.MAPREDUCE_APPLICATION_FRAMEWORK_PATH, "");
     if (!framework.isEmpty()) {
@@ -447,16 +467,20 @@ class JobSubmitter {
             + "' as a URI, check the setting for "
             + MRJobConfig.MAPREDUCE_APPLICATION_FRAMEWORK_PATH, e);
       }
-
+      //得到链接名称
       String linkedName = uri.getFragment();
 
       // resolve any symlinks in the URI path so using a "current" symlink
       // to point to a specific version shows the specific version
       // in the distributed cache configuration
+      //根据路径和文件得到对于的文件系统
       FileSystem fs = FileSystem.get(uri, conf);
+      //限定使用此FileSystem的路径，如果是相对的，则将设为绝对路径
       Path frameworkPath = fs.makeQualified(
           new Path(uri.getScheme(), uri.getAuthority(), uri.getPath()));
+      //拿到文件上下文
       FileContext fc = FileContext.getFileContext(frameworkPath.toUri(), conf);
+      //解析路径
       frameworkPath = fc.resolvePath(frameworkPath);
       uri = frameworkPath.toUri();
       try {

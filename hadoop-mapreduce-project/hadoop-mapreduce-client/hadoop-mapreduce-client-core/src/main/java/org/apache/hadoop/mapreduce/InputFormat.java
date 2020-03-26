@@ -69,7 +69,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 @InterfaceStability.Stable
 public abstract class InputFormat<K, V> {
 
-  /** 
+  /**
+   * 逻辑上拆分作业的输入文件集。
    * Logically split the set of input files for the job.  
    * 
    * <p>Each {@link InputSplit} is then assigned to an individual {@link Mapper}
@@ -89,6 +90,7 @@ public abstract class InputFormat<K, V> {
   
   /**
    * Create a record reader for a given split. The framework will call
+   * 根据给定的InputSplit创建对应的record reader，框架将回调用initialize(InputSplit, TaskAttemptContext)之前split被使用
    * {@link RecordReader#initialize(InputSplit, TaskAttemptContext)} before
    * the split is used.
    * @param split the split to be read

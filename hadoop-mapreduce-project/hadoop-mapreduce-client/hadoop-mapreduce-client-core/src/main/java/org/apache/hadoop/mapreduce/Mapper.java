@@ -109,6 +109,7 @@ public class Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
   
   /**
    * Called once at the beginning of the task.
+   * 任务开始时调用一次
    */
   protected void setup(Context context
                        ) throws IOException, InterruptedException {

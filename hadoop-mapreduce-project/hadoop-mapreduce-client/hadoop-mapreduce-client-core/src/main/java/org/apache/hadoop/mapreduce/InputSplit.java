@@ -29,10 +29,11 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.RecordReader;
 
 /**
- * <code>InputSplit</code> represents the data to be processed by an 
- * individual {@link Mapper}. 
+ *<code> InputSplit </ code>表示要由一个{@link Mapper}处理的数据。
+ * <code>InputSplit</code> represents the data to be processed by an
+ * individual {@link Mapper}.
  *
- * <p>Typically, it presents a byte-oriented view on the input and is the 
+ * <p>Typically, it presents a byte-oriented view on the input and is the
  * responsibility of {@link RecordReader} of the job to process this and present
  * a record-oriented view.
  * 
@@ -43,6 +44,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 @InterfaceStability.Stable
 public abstract class InputSplit {
   /**
+   * 得到这个分片的大小，为了输入分片集合能够根据该大小存储
    * Get the size of the split, so that the input splits can be sorted by size.
    * @return the number of bytes in the split
    * @throws IOException
@@ -51,6 +53,7 @@ public abstract class InputSplit {
   public abstract long getLength() throws IOException, InterruptedException;
 
   /**
+   * 通过名称获取节点列表，其中拆分数据将是本地的。 这些位置不需要序列化。
    * Get the list of nodes by name where the data for the split would be local.
    * The locations do not need to be serialized.
    * 

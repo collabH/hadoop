@@ -102,6 +102,7 @@ public class JobSubmissionFiles {
   }
 
   /**
+   * 初始化暂存目录并返回路径。它还跟踪所有必要的所有权和权限
    * Initializes the staging directory and returns the path. It also
    * keeps track of all necessary ownership and permissions
    * @param cluster
@@ -109,6 +110,7 @@ public class JobSubmissionFiles {
    */
   public static Path getStagingDir(Cluster cluster, Configuration conf)
       throws IOException, InterruptedException {
+    //得到当前登陆用户
     UserGroupInformation user = UserGroupInformation.getLoginUser();
     return getStagingDir(cluster, conf, user);
   }
@@ -129,11 +131,14 @@ public class JobSubmissionFiles {
   @VisibleForTesting
   public static Path getStagingDir(Cluster cluster, Configuration conf,
       UserGroupInformation realUser) throws IOException, InterruptedException {
+    //得到暂存区域
     Path stagingArea = cluster.getStagingAreaDir();
     FileSystem fs = stagingArea.getFileSystem(conf);
-    UserGroupInformation currentUser = realUser.getCurrentUser();
+    UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
     try {
+      //得到文件信息
       FileStatus fsStatus = fs.getFileStatus(stagingArea);
+      //得到文件拥有者
       String fileOwner = fsStatus.getOwner();
       if (!(fileOwner.equals(currentUser.getShortUserName()) || fileOwner
           .equalsIgnoreCase(currentUser.getUserName()) || fileOwner

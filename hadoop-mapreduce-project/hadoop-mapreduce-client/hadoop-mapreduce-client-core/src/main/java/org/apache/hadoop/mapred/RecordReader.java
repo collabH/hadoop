@@ -42,7 +42,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 public interface RecordReader<K, V> extends Closeable{
   /** 
    * Reads the next key/value pair from the input for processing.
-   *
+   * 读取下一个key/value节点进行处理通过input
    * @param key the key to read data into
    * @param value the value to read data into
    * @return true iff a key/value was read, false if at EOF
