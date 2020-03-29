@@ -54,6 +54,7 @@ public class InputSampler<K,V> extends
   public interface Sampler<K,V> extends
     org.apache.hadoop.mapreduce.lib.partition.InputSampler.Sampler<K, V> {
     /**
+     * 对于给定的作业，请从输入数据中收集并返回键的子集
      * For a given job, collect and return a subset of the keys from the
      * input data.
      */

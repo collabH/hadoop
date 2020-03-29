@@ -27,6 +27,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.chain.Chain.ChainBlockingQueue;
 
 /**
+ * 这个链式Mapper类运行使用多个mapper在一个map task里
  * The ChainMapper class allows to use multiple Mapper classes within a single
  * Map task.
  * 
@@ -85,6 +86,7 @@ public class ChainMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends
     Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
 
   /**
+   * 添加mapper到mapper链
    * Adds a {@link Mapper} class to the chain mapper.
    * 
    * <p>

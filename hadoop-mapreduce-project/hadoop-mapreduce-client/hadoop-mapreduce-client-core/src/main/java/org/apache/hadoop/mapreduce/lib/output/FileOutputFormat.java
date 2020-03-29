@@ -301,9 +301,11 @@ public abstract class FileOutputFormat<K, V> extends OutputFormat<K, V> {
    */
   public Path getDefaultWorkFile(TaskAttemptContext context,
                                  String extension) throws IOException{
+    //得到OutputCommitter
     OutputCommitter c = getOutputCommitter(context);
     Preconditions.checkState(c instanceof PathOutputCommitter,
         "Committer %s is not a PathOutputCommitter", c);
+    //得到文件暂存穆勒
     Path workPath = ((PathOutputCommitter) c).getWorkPath();
     Preconditions.checkNotNull(workPath,
         "Null workPath returned by committer %s", c);

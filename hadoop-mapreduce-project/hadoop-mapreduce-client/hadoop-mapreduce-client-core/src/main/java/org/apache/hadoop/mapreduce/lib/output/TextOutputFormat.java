@@ -42,6 +42,7 @@ import org.apache.hadoop.util.*;
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
+  //TextOutputFormat输出分隔符
   public static String SEPARATOR = "mapreduce.output.textoutputformat.separator";
   /**
    * @deprecated Use {@link #SEPARATOR}
@@ -53,7 +54,9 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
     private static final byte[] NEWLINE =
       "\n".getBytes(StandardCharsets.UTF_8);
 
+    //数据输出
     protected DataOutputStream out;
+    //键值分隔符字节数组
     private final byte[] keyValueSeparator;
 
     public LineRecordWriter(DataOutputStream out, String keyValueSeparator) {
@@ -62,6 +65,7 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         keyValueSeparator.getBytes(StandardCharsets.UTF_8);
     }
 
+    //默认为制表符
     public LineRecordWriter(DataOutputStream out) {
       this(out, "\t");
     }
@@ -73,31 +77,38 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
      * @throws IOException if the write throws, we pass it on
      */
     private void writeObject(Object o) throws IOException {
+      //如果为Text特殊处理
       if (o instanceof Text) {
         Text to = (Text) o;
         out.write(to.getBytes(), 0, to.getLength());
       } else {
+        //使用tostring转换字符串
         out.write(o.toString().getBytes(StandardCharsets.UTF_8));
       }
     }
 
     public synchronized void write(K key, V value)
       throws IOException {
-
+      //属否为null或者NullWritable
       boolean nullKey = key == null || key instanceof NullWritable;
       boolean nullValue = value == null || value instanceof NullWritable;
+      //都为null
       if (nullKey && nullValue) {
         return;
       }
+      //写入key
       if (!nullKey) {
         writeObject(key);
       }
+      //俩个都为false，写入制表符
       if (!(nullKey || nullValue)) {
         out.write(keyValueSeparator);
       }
+      //写入值
       if (!nullValue) {
         writeObject(value);
       }
+      //写入新行
       out.write(NEWLINE);
     }
 
@@ -107,10 +118,18 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
     }
   }
 
+  /**
+   * 将分片转换为RecordWriter，一行一行读取每一行交给一个map
+   * @param job
+   * @return
+   * @throws IOException
+   * @throws InterruptedException
+   */
   public RecordWriter<K, V> 
          getRecordWriter(TaskAttemptContext job
                          ) throws IOException, InterruptedException {
     Configuration conf = job.getConfiguration();
+    //是否压缩map输出
     boolean isCompressed = getCompressOutput(job);
     String keyValueSeparator= conf.get(SEPARATOR, "\t");
     CompressionCodec codec = null;
@@ -119,10 +138,12 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       Class<? extends CompressionCodec> codecClass = 
         getOutputCompressorClass(job, GzipCodec.class);
       codec = ReflectionUtils.newInstance(codecClass, conf);
+      //得到文件扩展名
       extension = codec.getDefaultExtension();
     }
     Path file = getDefaultWorkFile(job, extension);
     FileSystem fs = file.getFileSystem(conf);
+    //创建文件
     FSDataOutputStream fileOut = fs.create(file, false);
     if (isCompressed) {
       return new LineRecordWriter<>(

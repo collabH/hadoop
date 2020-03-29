@@ -18,11 +18,13 @@
 package org.apache.hadoop.mapreduce.checkpoint;
 
 /**
+ * 一个命名服务对于checkpoints
  * This class represent a naming service for checkpoints.
  */
 public interface CheckpointNamingService {
 
   /**
+   * 生成一个新的检查点名称
    * Generate a new checkpoint Name
    * @return the checkpoint name
    */

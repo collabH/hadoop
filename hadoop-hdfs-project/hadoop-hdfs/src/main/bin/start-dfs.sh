@@ -15,20 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+#启动hadoop dfs守护进程
 # Start hadoop dfs daemons.
+#优化升级或回滚dfs状态。
 # Optinally upgrade or rollback dfs state.
+#运行在master节点上
 # Run this on master node.
 
+# 启动矩阵
 ## startup matrix:
-#
+
 # if $EUID != 0, then exec
 # if $EUID =0 then
 #    if hdfs_subcmd_user is defined, su to that user, exec
 #    if hdfs_subcmd_user is not defined, error
 #
 # For secure daemons, this means both the secure and insecure env vars need to be
-# defined.  e.g., HDFS_DATANODE_USER=root HDFS_DATANODE_SECURE_USER=hdfs
+# defined.
+# 定义datanode用户和安全用户
+# e.g., HDFS_DATANODE_USER=root HDFS_DATANODE_SECURE_USER=hdfs
 #
 
 ## @description  usage info
@@ -60,7 +65,7 @@ else
   exit 1
 fi
 
-# get arguments
+# get arguments 得到参数
 if [[ $# -ge 1 ]]; then
   startOpt="$1"
   shift
@@ -82,15 +87,17 @@ fi
 nameStartOpt="$nameStartOpt $*"
 
 #---------------------------------------------------------
-# namenodes
+# namenodes 运行hdfs脚本得到anmenode的主机名
 
 NAMENODES=$("${HADOOP_HDFS_HOME}/bin/hdfs" getconf -namenodes 2>/dev/null)
 
 if [[ -z "${NAMENODES}" ]]; then
+# 给hostname
   NAMENODES=$(hostname)
 fi
-
+# 输出NAMENODES的名称
 echo "Starting namenodes on [${NAMENODES}]"
+# 启动namenode守护进程
 hadoop_uservar_su hdfs namenode "${HADOOP_HDFS_HOME}/bin/hdfs" \
     --workers \
     --config "${HADOOP_CONF_DIR}" \
@@ -102,7 +109,7 @@ HADOOP_JUMBO_RETCOUNTER=$?
 
 #---------------------------------------------------------
 # datanodes (using default workers file)
-
+# 启动datanodes
 echo "Starting datanodes"
 hadoop_uservar_su hdfs datanode "${HADOOP_HDFS_HOME}/bin/hdfs" \
     --workers \
@@ -112,8 +119,8 @@ hadoop_uservar_su hdfs datanode "${HADOOP_HDFS_HOME}/bin/hdfs" \
 (( HADOOP_JUMBO_RETCOUNTER=HADOOP_JUMBO_RETCOUNTER + $? ))
 
 #---------------------------------------------------------
-# secondary namenodes (if any)
-
+# secondary namenodes (if any) # 启动辅助namenode
+# 得到集群中辅助namenode的地址
 SECONDARY_NAMENODES=$("${HADOOP_HDFS_HOME}/bin/hdfs" getconf -secondarynamenodes 2>/dev/null)
 
 if [[ -n "${SECONDARY_NAMENODES}" ]]; then
@@ -124,13 +131,13 @@ if [[ -n "${SECONDARY_NAMENODES}" ]]; then
     hadoop_error "WARNING: Skipping SecondaryNameNode."
 
   else
-
+    # 如果辅助namenode的地址为0.0.0.0将它设置为主机名
     if [[ "${SECONDARY_NAMENODES}" == "0.0.0.0" ]]; then
       SECONDARY_NAMENODES=$(hostname)
     fi
 
     echo "Starting secondary namenodes [${SECONDARY_NAMENODES}]"
-
+    # 启动secondarynamenode
     hadoop_uservar_su hdfs secondarynamenode "${HADOOP_HDFS_HOME}/bin/hdfs" \
       --workers \
       --config "${HADOOP_CONF_DIR}" \
@@ -159,7 +166,7 @@ if [[ "${#JOURNAL_NODES}" != 0 ]]; then
 fi
 
 #---------------------------------------------------------
-# ZK Failover controllers, if auto-HA is enabled
+# ZK Failover controllers, if auto-HA is enabled 故障转移和ha
 AUTOHA_ENABLED=$("${HADOOP_HDFS_HOME}/bin/hdfs" getconf -confKey dfs.ha.automatic-failover.enabled | tr '[:upper:]' '[:lower:]')
 if [[ "${AUTOHA_ENABLED}" = "true" ]]; then
   echo "Starting ZK Failover Controllers on NN hosts [${NAMENODES}]"

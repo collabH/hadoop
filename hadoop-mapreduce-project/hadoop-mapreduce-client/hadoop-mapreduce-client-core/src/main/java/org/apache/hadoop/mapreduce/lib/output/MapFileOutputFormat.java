@@ -40,7 +40,8 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 
-/** 
+/**
+ * MapFile格式输出
  * An {@link org.apache.hadoop.mapreduce.OutputFormat} that writes 
  * {@link MapFile}s.
  */

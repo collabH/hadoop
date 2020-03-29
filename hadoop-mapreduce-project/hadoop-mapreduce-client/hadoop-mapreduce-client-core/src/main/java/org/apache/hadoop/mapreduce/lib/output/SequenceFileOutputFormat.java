@@ -42,12 +42,21 @@ import org.apache.hadoop.conf.Configuration;
 @InterfaceStability.Stable
 public class SequenceFileOutputFormat <K,V> extends FileOutputFormat<K, V> {
 
+  /**
+   * 得到顺序文件写入者
+   * @param context
+   * @param keyClass
+   * @param valueClass
+   * @return
+   * @throws IOException
+   */
   protected SequenceFile.Writer getSequenceWriter(TaskAttemptContext context,
       Class<?> keyClass, Class<?> valueClass) 
       throws IOException {
     Configuration conf = context.getConfiguration();
 	    
     CompressionCodec codec = null;
+    //不压缩
     CompressionType compressionType = CompressionType.NONE;
     if (getCompressOutput(context)) {
       // find the kind of compression to do
@@ -79,7 +88,7 @@ public class SequenceFileOutputFormat <K,V> extends FileOutputFormat<K, V> {
 
         public void write(K key, V value)
           throws IOException {
-
+        //累加
           out.append(key, value);
         }
 

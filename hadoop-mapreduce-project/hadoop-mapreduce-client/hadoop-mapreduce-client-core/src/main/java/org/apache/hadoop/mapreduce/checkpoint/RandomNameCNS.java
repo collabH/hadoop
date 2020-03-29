@@ -20,6 +20,7 @@ package org.apache.hadoop.mapreduce.checkpoint;
 import org.apache.commons.lang3.RandomStringUtils;
 
 /**
+ * 简单的命名服务生成随机的检查点名称
  * Simple naming service that generates a random checkpoint name.
  */
 public class RandomNameCNS implements CheckpointNamingService {

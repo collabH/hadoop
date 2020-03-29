@@ -23,6 +23,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
 /**
+ * 必须实现允许可插拔的DNS名/ IP地址，以RackID解析器的接口
  * An interface that must be implemented to allow pluggable
  * DNS-name/IP-address to RackID resolvers.
  *
@@ -41,6 +42,8 @@ public interface DNSToSwitchMapping {
    * The network topology of the cluster would determine the number of
    * components in the network path.
    * <p>
+   * 输入参数names描述IP地址列表，返回相应的网络位置字符串列表。net.topology.node.switch.mapping.impl配置属性实现了DNSToSwitchMapping接口，
+   * namenode和RM均采用它来解析工作节点的网络位置。
    *
    * If a name cannot be resolved to a rack, the implementation
    * should return {@link NetworkTopology#DEFAULT_RACK}. This

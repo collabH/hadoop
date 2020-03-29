@@ -17,6 +17,9 @@
  */
 package org.apache.hadoop.mapreduce.checkpoint;
 
+/**
+ * 计数器
+ */
 public enum EnumCounter {
   INPUTKEY,
   INPUTVALUE,

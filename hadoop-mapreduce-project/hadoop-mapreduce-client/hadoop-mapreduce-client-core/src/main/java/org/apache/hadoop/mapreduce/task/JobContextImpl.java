@@ -45,6 +45,7 @@ import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 
 /**
+ * //todo default job env
  * A read-only view of the job that is provided to the tasks while they
  * are running.
  */

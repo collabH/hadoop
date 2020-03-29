@@ -25,11 +25,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 
 /**
+ * 基于文件系统的检查点ID包含对保存检查点的路径的引用。
  * A FileSystem based checkpoint ID contains reference to the Path
  * where the checkpoint has been saved.
  */
 public class FSCheckpointID implements CheckpointID {
 
+  //检查点路径
   private Path path;
 
   public FSCheckpointID(){
@@ -48,11 +50,13 @@ public class FSCheckpointID implements CheckpointID {
     return path.toString();
   }
 
+  //写入检查点路径
   @Override
   public void write(DataOutput out) throws IOException {
     Text.writeString(out, path.toString());
   }
 
+  //读取检查点路径
   @Override
   public void readFields(DataInput in) throws IOException {
     this.path = new Path(Text.readString(in));

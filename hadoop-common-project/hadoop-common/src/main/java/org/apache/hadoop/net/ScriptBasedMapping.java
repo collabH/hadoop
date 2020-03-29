@@ -30,7 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class implements the {@link DNSToSwitchMapping} interface using a 
+ * 默认的DNS映射
+ * This class implements the {@link DNSToSwitchMapping} interface using a
  * script configured via the
  * {@link CommonConfigurationKeys#NET_TOPOLOGY_SCRIPT_FILE_NAME_KEY} option.
  * <p>

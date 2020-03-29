@@ -49,6 +49,7 @@
 # preferred.  Many sites configure these options outside of Hadoop,
 # such as in /etc/profile.d
 
+# 使用java实现，默认这个环境变量是必须的在全部平台除了OS X
 # The java implementation to use. By default, this environment
 # variable is REQUIRED on ALL platforms except OS X!
 # export JAVA_HOME=
@@ -148,6 +149,7 @@ export HADOOP_OS_TYPE=${HADOOP_OS_TYPE:-$(uname -s)}
 
 ###
 # Options for remote shell connectivity
+# 参数对远程shello连接 ssh配置
 ###
 
 # There are some optional components of hadoop that allow for
@@ -257,6 +259,7 @@ export HADOOP_OS_TYPE=${HADOOP_OS_TYPE:-$(uname -s)}
 # export HADOOP_SECURE_LOG=${HADOOP_LOG_DIR}
 
 #
+# 日志文件名配置
 # When running a secure daemon, the default value of HADOOP_IDENT_STRING
 # ends up being a bit bogus.  Therefore, by default, the code will
 # replace HADOOP_IDENT_STRING with HADOOP_xx_SECURE_USER.  If one wants

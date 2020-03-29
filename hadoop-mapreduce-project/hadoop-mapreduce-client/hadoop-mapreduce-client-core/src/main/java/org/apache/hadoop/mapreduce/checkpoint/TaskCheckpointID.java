@@ -29,6 +29,8 @@ import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapred.Counters;
 
 /**
+ *
+ * 它包含一个约检查站和其他计数器的成本参考到底层FileSsytem基于检查点，以及各种元数据。 这是通过任务的AM发送到被存储并提供给同一任务的下一次执行。
  * Implementation of CheckpointID used in MR. It contains a reference to an
  * underlying FileSsytem based checkpoint, and various metadata about the
  * cost of checkpoints and other counters. This is sent by the task to the AM

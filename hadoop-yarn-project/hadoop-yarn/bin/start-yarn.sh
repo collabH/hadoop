@@ -47,10 +47,11 @@ fi
 
 HADOOP_JUMBO_RETCOUNTER=0
 
-# start resourceManager
+# start resourceManager 启动RM
 HARM=$("${HADOOP_HDFS_HOME}/bin/hdfs" getconf -confKey yarn.resourcemanager.ha.enabled 2>&-)
 if [[ ${HARM} = "false" ]]; then
   echo "Starting resourcemanager"
+  # 启动RM
   hadoop_uservar_su yarn resourcemanager "${HADOOP_YARN_HOME}/bin/yarn" \
       --config "${HADOOP_CONF_DIR}" \
       --daemon start \
@@ -74,7 +75,7 @@ else
   (( HADOOP_JUMBO_RETCOUNTER=HADOOP_JUMBO_RETCOUNTER + $? ))
 fi
 
-# start nodemanager
+# start nodemanager 在slaves文件的机器上启动nm
 echo "Starting nodemanagers"
 hadoop_uservar_su yarn nodemanager "${HADOOP_YARN_HOME}/bin/yarn" \
     --config "${HADOOP_CONF_DIR}" \
@@ -84,7 +85,7 @@ hadoop_uservar_su yarn nodemanager "${HADOOP_YARN_HOME}/bin/yarn" \
 (( HADOOP_JUMBO_RETCOUNTER=HADOOP_JUMBO_RETCOUNTER + $? ))
 
 
-# start proxyserver
+# start proxyserver 启动代理服务器
 PROXYSERVER=$("${HADOOP_HDFS_HOME}/bin/hdfs" getconf -confKey  yarn.web-proxy.address 2>&- | cut -f1 -d:)
 if [[ -n ${PROXYSERVER} ]]; then
  hadoop_uservar_su yarn proxyserver "${HADOOP_YARN_HOME}/bin/yarn" \
