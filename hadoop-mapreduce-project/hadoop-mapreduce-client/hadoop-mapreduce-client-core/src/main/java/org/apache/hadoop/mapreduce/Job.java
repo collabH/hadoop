@@ -1565,6 +1565,7 @@ public class Job extends JobContextImpl implements JobContext, AutoCloseable {
   synchronized void connect()
           throws IOException, InterruptedException, ClassNotFoundException {
     if (cluster == null) {
+      // 通过ugi建立网络连接
       cluster = 
         ugi.doAs(new PrivilegedExceptionAction<Cluster>() {
                    public Cluster run()
@@ -1593,11 +1594,16 @@ public class Job extends JobContextImpl implements JobContext, AutoCloseable {
    */
   public void submit() 
          throws IOException, InterruptedException, ClassNotFoundException {
+    // 校验Job状态
     ensureState(JobState.DEFINE);
+    // 向上兼容
     setUseNewAPI();
+    // 建立网络连接，判断是local模式还是yarn模式来建立对应连接
     connect();
+    //根据不同的集群模式拿到对应的JobSubmitter，new一个JobSubmitter对象
     final JobSubmitter submitter = 
         getJobSubmitter(cluster.getFileSystem(), cluster.getClient());
+    //以当前用户的身份去运行
     status = ugi.doAs(new PrivilegedExceptionAction<JobStatus>() {
       public JobStatus run() throws IOException, InterruptedException, 
       ClassNotFoundException {

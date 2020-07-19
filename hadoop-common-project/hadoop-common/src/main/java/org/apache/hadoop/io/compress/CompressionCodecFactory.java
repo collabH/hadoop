@@ -38,7 +38,8 @@ public class CompressionCodecFactory {
 
   public static final Logger LOG =
       LoggerFactory.getLogger(CompressionCodecFactory.class.getName());
-  
+
+  //jdk spi机制
   private static final ServiceLoader<CompressionCodec> CODEC_PROVIDERS =
     ServiceLoader.load(CompressionCodec.class);
 

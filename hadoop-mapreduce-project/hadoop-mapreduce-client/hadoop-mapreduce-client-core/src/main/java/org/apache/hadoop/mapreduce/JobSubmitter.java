@@ -77,39 +77,42 @@ class JobSubmitter {
   private ClientProtocol submitClient;
   private String submitHostName;
   private String submitHostAddress;
-  
-  JobSubmitter(FileSystem submitFs, ClientProtocol submitClient) 
+
+  JobSubmitter(FileSystem submitFs, ClientProtocol submitClient)
   throws IOException {
     this.submitClient = submitClient;
     this.jtFs = submitFs;
   }
-  
+
   /**
-   * configure the jobconf of the user with the command line options of 
+   * configure the jobconf of the user with the command line options of
    * -libjars, -files, -archives.
    * @param job
    * @throws IOException
    */
-  private void copyAndConfigureFiles(Job job, Path jobSubmitDir) 
+  private void copyAndConfigureFiles(Job job, Path jobSubmitDir)
   throws IOException {
     Configuration conf = job.getConfiguration();
+    //
     boolean useWildcards = conf.getBoolean(Job.USE_WILDCARD_FOR_LIBJARS,
         Job.DEFAULT_USE_WILDCARD_FOR_LIBJARS);
+    // 创建job资源上传器
     JobResourceUploader rUploader = new JobResourceUploader(jtFs, useWildcards);
 
+    // 上传资源信息
     rUploader.uploadResources(job, jobSubmitDir);
 
     // Get the working directory. If not set, sets it to filesystem working dir
     // This code has been added so that working directory reset before running
     // the job. This is necessary for backward compatibility as other systems
     // might use the public API JobConf#setWorkingDirectory to reset the working
-    // directory.
+    // directory. 得到工作目录
     job.getWorkingDirectory();
   }
 
   /**
    * Internal method for submitting jobs to the system.
-   * 
+   *
    * <p>The job submission process involves:
    * <ol>
    *   <li>
@@ -119,12 +122,12 @@ class JobSubmitter {
    *   Computing the {@link InputSplit}s for the job.
    *   </li>
    *   <li>
-   *   Setup the requisite accounting information for the 
+   *   Setup the requisite accounting information for the
    *   {@link DistributedCache} of the job, if necessary.
    *   </li>
    *   <li>
    *   Copying the job's jar and configuration to the map-reduce system
-   *   directory on the distributed file-system. 
+   *   directory on the distributed file-system.
    *   </li>
    *   <li>
    *   Submitting the job to the <code>JobTracker</code> and optionally
@@ -137,7 +140,7 @@ class JobSubmitter {
    * @throws InterruptedException
    * @throws IOException
    */
-  JobStatus submitJobInternal(Job job, Cluster cluster) 
+  JobStatus submitJobInternal(Job job, Cluster cluster)
   throws ClassNotFoundException, InterruptedException, IOException {
 
     //validate the jobs output specs
@@ -146,8 +149,9 @@ class JobSubmitter {
 
     Configuration conf = job.getConfiguration();
 
+    // 将配置添加至MR的分布式缓存中
     addMRFrameworkToDistributedCache(conf);
-    //得到任务暂存区域路径
+    //得到任务暂存区域路径，临时的数据会存放在这个路径
     Path jobStagingArea = JobSubmissionFiles.getStagingDir(cluster, conf);
     //configure the command line options correctly on the submitting dfs
     //在提交的dfs上正确配置命令行选项
@@ -162,21 +166,22 @@ class JobSubmitter {
     //得到一个新的jobId
     JobID jobId = submitClient.getNewJobID();
     job.setJobID(jobId);
-    //创建提交的job目录路径
+    //创建提交的job目录路径，先写道临时区
     Path submitJobDir = new Path(jobStagingArea, jobId.toString());
     JobStatus status = null;
+    // 设置配置用户名，mapreduce任务输出临时目录
     try {
       conf.set(MRJobConfig.USER_NAME,
           UserGroupInformation.getCurrentUser().getShortUserName());
-      conf.set("hadoop.http.filter.initializers", 
+      conf.set("hadoop.http.filter.initializers",
           "org.apache.hadoop.yarn.server.webproxy.amfilter.AmFilterInitializer");
       conf.set(MRJobConfig.MAPREDUCE_JOB_DIR, submitJobDir.toString());
-      LOG.debug("Configuring job " + jobId + " with " + submitJobDir 
+      LOG.debug("Configuring job " + jobId + " with " + submitJobDir
           + " as the submit dir");
       // get delegation token for the dir
       TokenCache.obtainTokensForNamenodes(job.getCredentials(),
           new Path[] { submitJobDir }, conf);
-      
+
       populateTokenCache(conf, job.getCredentials());
 
       // generate a secret to authenticate shuffle transfers
@@ -198,16 +203,21 @@ class JobSubmitter {
                 "data spill is enabled");
       }
 
+      // 复制和配置文件
       copyAndConfigureFiles(job, submitJobDir);
 
+      // 拿到提交作业的文件路径
       Path submitJobFile = JobSubmissionFiles.getJobConfPath(submitJobDir);
-      
+
       // Create the splits for the job
       LOG.debug("Creating splits at " + jtFs.makeQualified(submitJobDir));
+      // 写分片
       int maps = writeSplits(job, submitJobDir);
+      // 设置mapreduce.job.maps个数
       conf.setInt(MRJobConfig.NUM_MAPS, maps);
       LOG.info("number of splits:" + maps);
 
+      // 获取配置的最大maptask个数
       int maxMaps = conf.getInt(MRJobConfig.JOB_MAX_MAP,
           MRJobConfig.DEFAULT_JOB_MAX_MAP);
       if (maxMaps >= 0 && maxMaps < maps) {
@@ -216,7 +226,7 @@ class JobSubmitter {
       }
 
       // write "queue admins of the queue to which job is being submitted"
-      // to job file.
+      // to job file.得到队列名称
       String queue = conf.get(MRJobConfig.QUEUE_NAME,
           JobConf.DEFAULT_QUEUE_NAME);
       AccessControlList acl = submitClient.getQueueAdmins(queue);
@@ -250,11 +260,12 @@ class JobSubmitter {
 
       // Write job file to submit dir
       writeConf(conf, submitJobFile);
-      
+
       //
       // Now, actually submit the job (using the submit name)
       //
       printTokens(jobId, job.getCredentials());
+      // 提交任务
       status = submitClient.submitJob(
           jobId, submitJobDir.toString(), job.getCredentials());
       if (status != null) {
@@ -279,34 +290,43 @@ class JobSubmitter {
    * @throws InterruptedException
    * @throws IOException
    */
-  private void checkSpecs(Job job) throws ClassNotFoundException, 
+  private void checkSpecs(Job job) throws ClassNotFoundException,
       InterruptedException, IOException {
     JobConf jConf = (JobConf)job.getConfiguration();
-    // Check the output specification
-    if (jConf.getNumReduceTasks() == 0 ? 
+    // Check the output specification，先上兼容
+    if (jConf.getNumReduceTasks() == 0 ?
         jConf.getUseNewMapper() : jConf.getUseNewReducer()) {
+      //根据反射拿到job输出类型，这也是为什么需要mr指定类型的原因，因为反射会将反型类型擦除
       org.apache.hadoop.mapreduce.OutputFormat<?, ?> output =
         ReflectionUtils.newInstance(job.getOutputFormatClass(),
           job.getConfiguration());
+      // 校验输出地址空间
       output.checkOutputSpecs(job);
     } else {
       jConf.getOutputFormat().checkOutputSpecs(jtFs, jConf);
     }
   }
-  
-  private void writeConf(Configuration conf, Path jobFile) 
+
+    /**
+     * 写配置文件
+     * @param conf
+     * @param jobFile
+     * @throws IOException
+     */
+  private void writeConf(Configuration conf, Path jobFile)
       throws IOException {
-    // Write job file to JobTracker's fs        
-    FSDataOutputStream out = 
-      FileSystem.create(jtFs, jobFile, 
+    // Write job file to JobTracker's fs 写入job文件到JobTracker的文件系统中
+    FSDataOutputStream out =
+      FileSystem.create(jtFs, jobFile,
                         new FsPermission(JobSubmissionFiles.JOB_FILE_PERMISSION));
     try {
+        // 写job.xml
       conf.writeXml(out);
     } finally {
       out.close();
     }
   }
-  
+
   private void printTokens(JobID jobId,
       Credentials credentials) throws IOException {
     LOG.info("Submitting tokens for job: " + jobId);
@@ -318,25 +338,40 @@ class JobSubmitter {
   int writeNewSplits(JobContext job, Path jobSubmitDir) throws IOException,
       InterruptedException, ClassNotFoundException {
     Configuration conf = job.getConfiguration();
+    // 反射从配置中拿到输入类型
     InputFormat<?, ?> input =
       ReflectionUtils.newInstance(job.getInputFormatClass(), conf);
 
+    // 客户端分片
     List<InputSplit> splits = input.getSplits(job);
+    //创建分片数组
     T[] array = (T[]) splits.toArray(new InputSplit[splits.size()]);
 
     // sort the splits into order based on size, so that the biggest
-    // go first
+    // go first，分片排序
     Arrays.sort(array, new SplitComparator());
-    JobSplitWriter.createSplitFiles(jobSubmitDir, conf, 
+    // 创建分片文件
+    JobSplitWriter.createSplitFiles(jobSubmitDir, conf,
         jobSubmitDir.getFileSystem(conf), array);
     return array.length;
   }
-  
+
+  /**
+   * 客户端分片
+   * @param job
+   * @param jobSubmitDir
+   * @return
+   * @throws IOException
+   * @throws InterruptedException
+   * @throws ClassNotFoundException
+   */
   private int writeSplits(org.apache.hadoop.mapreduce.JobContext job,
       Path jobSubmitDir) throws IOException,
       InterruptedException, ClassNotFoundException {
     JobConf jConf = (JobConf)job.getConfiguration();
+    // 根据分片文件数得到对应maptask个数
     int maps;
+    // 向下兼容
     if (jConf.getUseNewMapper()) {
       maps = writeNewSplits(job, jobSubmitDir);
     } else {
@@ -344,9 +379,9 @@ class JobSubmitter {
     }
     return maps;
   }
-  
+
   //method to write splits for old api mapper.
-  private int writeOldSplits(JobConf job, Path jobSubmitDir) 
+  private int writeOldSplits(JobConf job, Path jobSubmitDir)
   throws IOException {
     org.apache.hadoop.mapred.InputSplit[] splits =
     job.getInputFormat().getSplits(job, job.getNumMapTasks());
@@ -370,11 +405,11 @@ class JobSubmitter {
         }
       }
     });
-    JobSplitWriter.createSplitFiles(jobSubmitDir, job, 
+    JobSplitWriter.createSplitFiles(jobSubmitDir, job,
         jobSubmitDir.getFileSystem(job), splits);
     return splits.length;
   }
-  
+
   private static class SplitComparator implements Comparator<InputSplit> {
     @Override
     public int compare(InputSplit o1, InputSplit o2) {
@@ -395,7 +430,7 @@ class JobSubmitter {
       }
     }
   }
-  
+
   @SuppressWarnings("unchecked")
   private void readTokensFromFiles(Configuration conf, Credentials credentials)
   throws IOException {
@@ -431,12 +466,12 @@ class JobSubmitter {
   }
 
   //get secret keys and tokens and store them into TokenCache
-  private void populateTokenCache(Configuration conf, Credentials credentials) 
+  private void populateTokenCache(Configuration conf, Credentials credentials)
   throws IOException{
     readTokensFromFiles(conf, credentials);
     // add the delegation tokens from configuration
     String [] nameNodes = conf.getStrings(MRJobConfig.JOB_NAMENODES);
-    LOG.debug("adding the following namenodes' delegation tokens:" + 
+    LOG.debug("adding the following namenodes' delegation tokens:" +
         Arrays.toString(nameNodes));
     if(nameNodes != null) {
       Path [] ps = new Path[nameNodes.length];
@@ -490,6 +525,7 @@ class JobSubmitter {
         throw new IllegalArgumentException(e);
       }
 
+      //配置加入分布式缓存中
       DistributedCache.addCacheArchive(uri, conf);
     }
   }

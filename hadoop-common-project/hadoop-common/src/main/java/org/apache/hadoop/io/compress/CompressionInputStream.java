@@ -27,7 +27,7 @@ import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
 /**
  * A compression input stream.
- *
+ * 压缩的输入流
  * <p>Implementations are assumed to be buffered.  This permits clients to
  * reposition the underlying input stream then call {@link #resetState()},
  * without having to also synchronize client buffers.

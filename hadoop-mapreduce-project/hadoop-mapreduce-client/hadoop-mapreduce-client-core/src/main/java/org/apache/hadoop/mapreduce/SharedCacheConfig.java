@@ -43,6 +43,7 @@ public class SharedCacheConfig {
   private boolean sharedCacheJobjarEnabled = false;
 
   public void init(Configuration conf) {
+    // 如果不是yarn模式直接返回不尽兴下部分操作
     if (!MRConfig.YARN_FRAMEWORK_NAME.equals(conf.get(
         MRConfig.FRAMEWORK_NAME))) {
       // Shared cache is only valid if the job runs on yarn

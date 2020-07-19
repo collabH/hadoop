@@ -29,7 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /** A Comparator for {@link WritableComparable}s.
- *
+ * RawComparator的实现
  * <p>This base implementation uses the natural ordering.  To define alternate
  * orderings, override {@link #compare(WritableComparable,WritableComparable)}.
  *
@@ -154,9 +154,11 @@ public class WritableComparator implements RawComparator, Configurable {
   @Override
   public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
     try {
+      //解析key1
       buffer.reset(b1, s1, l1);                   // parse key1
       key1.readFields(buffer);
-      
+
+      //解析key2
       buffer.reset(b2, s2, l2);                   // parse key2
       key2.readFields(buffer);
       

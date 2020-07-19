@@ -24,6 +24,9 @@ import java.lang.reflect.Constructor;
 import org.apache.hadoop.ipc.protobuf.RpcHeaderProtos.RpcResponseHeaderProto.RpcErrorCodeProto;
 import org.xml.sax.Attributes;
 
+/**
+ * 远程连接异常，应用于IPC客户端，表示远程过程调用中的错误
+ */
 public class RemoteException extends IOException {
   /** this value should not be defined in RpcHeader.proto so that protobuf will return a null */
   private static final int UNSPECIFIED_ERROR = -1;

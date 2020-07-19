@@ -401,9 +401,9 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
    */
   public List<InputSplit> getSplits(JobContext job) throws IOException {
     StopWatch sw = new StopWatch().start();
-    //得到最小的分片大小
+    //得到最小的分片大小，1和mapreduce.input.fileinputformat.split.minsize配置比取最大值为最小分片大小
     long minSize = Math.max(getFormatMinSplitSize(), getMinSplitSize(job));
-    //得到最大分片大小
+    //得到最大分片大小mapreduce.input.fileinputformat.split.maxsize或者long的最大值
     long maxSize = getMaxSplitSize(job);
 
     // generate splits
@@ -433,14 +433,15 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
           FileSystem fs = path.getFileSystem(job.getConfiguration());
           blkLocations = fs.getFileBlockLocations(file, 0, length);
         }
-        //是否需要分片
+        //是否需要分片，默认需要分片，
         if (isSplitable(job, path)) {
           //块大小
           long blockSize = file.getBlockSize();
-          //分片大小
+          //分片大小,Math.max(minSize, Math.min(maxSize, blockSize))
           long splitSize = computeSplitSize(blockSize, minSize, maxSize);
 
           long bytesRemaining = length;
+          // 客户端开始分片，剩余数量/分片大小大于1.1
           while (((double) bytesRemaining)/splitSize > SPLIT_SLOP) {
             //得到块索引
             int blkIndex = getBlockIndex(blkLocations, length-bytesRemaining);

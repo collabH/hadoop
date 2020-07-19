@@ -76,9 +76,11 @@ public interface Writable {
    */
   void write(DataOutput out) throws IOException;
 
-  /** 
+  /**
+   * 对象的字段反序列化
    * Deserialize the fields of this object from <code>in</code>.  
-   * 
+   *
+   * 更高效的，实现应该尝试复用已经存在的存储对象
    * <p>For efficiency, implementations should attempt to re-use storage in the 
    * existing object where possible.</p>
    * 

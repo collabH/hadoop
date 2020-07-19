@@ -75,6 +75,7 @@ public class Cluster {
 
   private void initProviderList() {
     if (providerList == null) {
+      // 集群资源调度者，通过JAVA SPI机制实现
       synchronized (frameworkLoader) {
         if (providerList == null) {
           List<ClientProtocolProvider> localProviderList =
@@ -106,14 +107,24 @@ public class Cluster {
   public Cluster(InetSocketAddress jobTrackAddr, Configuration conf) 
       throws IOException {
     this.conf = conf;
+    // 拿到当前用户的用户组信息
     this.ugi = UserGroupInformation.getCurrentUser();
+    // 初始化集群对象
     initialize(jobTrackAddr, conf);
   }
-  
+
+  /**
+   * 初始化集群对象
+   * @param jobTrackAddr
+   * @param conf
+   * @throws IOException
+   */
   private void initialize(InetSocketAddress jobTrackAddr, Configuration conf)
       throws IOException {
 
+    // 初始化提供者列表，主要包含local模式和yarn模式，根据mapred-site.xml中的配置，mapreduce.framework.name定义
     initProviderList();
+    // 定义初始化异常
     final IOException initEx = new IOException(
         "Cannot initialize Cluster. Please check your configuration for "
             + MRConfig.FRAMEWORK_NAME
@@ -122,17 +133,20 @@ public class Cluster {
       LOG.info(
           "Initializing cluster for Job Tracker=" + jobTrackAddr.toString());
     }
+    // 遍历集群提供者，建立连接
     for (ClientProtocolProvider provider : providerList) {
       LOG.debug("Trying ClientProtocolProvider : "
           + provider.getClass().getName());
       ClientProtocol clientProtocol = null;
       try {
+        // 创建客户端协议
         if (jobTrackAddr == null) {
           clientProtocol = provider.create(conf);
         } else {
           clientProtocol = provider.create(jobTrackAddr, conf);
         }
 
+        // 客户端赋值
         if (clientProtocol != null) {
           clientProtocolProvider = provider;
           client = clientProtocol;

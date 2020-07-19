@@ -322,14 +322,17 @@ public class YARNRunner implements ClientProtocol {
     
     addHistoryToken(ts);
 
+    // 创建Application上下文 设置应用提交上下文包含 applicationMaster参数设置，job参数，资源申请请求封装等
     ApplicationSubmissionContext appContext =
       createApplicationSubmissionContext(conf, jobSubmitDir, ts);
 
     // Submit to ResourceManager
     try {
+      // 提交至RM
       ApplicationId applicationId =
           resMgrDelegate.submitApplication(appContext);
 
+      // 拿到对应的applicationMaster
       ApplicationReport appMaster = resMgrDelegate
           .getApplicationReport(applicationId);
       String diagnostics =
@@ -441,6 +444,11 @@ public class YARNRunner implements ClientProtocol {
     return localResources;
   }
 
+  /**
+   * 设置applicationMaster启动参数
+   * @param jobConf
+   * @return
+   */
   private List<String> setupAMCommand(Configuration jobConf) {
     List<String> vargs = new ArrayList<>(8);
     vargs.add(MRApps.crossPlatformifyMREnv(jobConf, Environment.JAVA_HOME)
@@ -504,6 +512,15 @@ public class YARNRunner implements ClientProtocol {
     return vargs;
   }
 
+  /**
+   * 合并applicationMaster所需启动参数
+   * @param jobConf
+   * @param localResources
+   * @param securityTokens
+   * @param vargs
+   * @return
+   * @throws IOException
+   */
   private ContainerLaunchContext setupContainerLaunchContextForAM(
       Configuration jobConf, Map<String, LocalResource> localResources,
       ByteBuffer securityTokens, List<String> vargs) throws IOException {
@@ -511,6 +528,9 @@ public class YARNRunner implements ClientProtocol {
     Vector<String> vargsFinal = new Vector<>(8);
     // Final command
     StringBuilder mergedCommand = new StringBuilder();
+    /**
+     *  合并marpreduceApplicationMaster启动命令
+     */
     for (CharSequence str : vargs) {
       mergedCommand.append(str).append(" ");
     }
@@ -552,6 +572,7 @@ public class YARNRunner implements ClientProtocol {
         MRJobConfig.JOB_ACL_MODIFY_JOB,
         MRJobConfig.DEFAULT_JOB_ACL_MODIFY_JOB));
 
+    // 封装容器执行上下文
     return ContainerLaunchContext.newInstance(localResources, environment,
         vargsFinal, null, securityTokens, acls);
   }
@@ -579,8 +600,9 @@ public class YARNRunner implements ClientProtocol {
     ByteBuffer securityTokens =
         ByteBuffer.wrap(dob.getData(), 0, dob.getLength());
 
-    // Setup ContainerLaunchContext for AM container
+    // Setup ContainerLaunchContext for AM container，设置启动am容器命令
     List<String> vargs = setupAMCommand(jobConf);
+    //为am设置容器启动上下文
     ContainerLaunchContext amContainer = setupContainerLaunchContextForAM(
         jobConf, localResources, securityTokens, vargs);
 
@@ -630,7 +652,7 @@ public class YARNRunner implements ClientProtocol {
         conf.getInt(MRJobConfig.MR_AM_MAX_ATTEMPTS,
             MRJobConfig.DEFAULT_MR_AM_MAX_ATTEMPTS));
 
-    // Setup the AM ResourceRequests
+    // Setup the AM ResourceRequests 设置am资源请求
     List<ResourceRequest> amResourceRequests = generateResourceRequests();
     appContext.setAMContainerResourceRequests(amResourceRequests);
 
@@ -665,7 +687,13 @@ public class YARNRunner implements ClientProtocol {
     return appContext;
   }
 
+  /**
+   * 生成资源请求
+   * @return
+   * @throws IOException
+   */
   private List<ResourceRequest> generateResourceRequests() throws IOException {
+    //申请资源
     Resource capability = recordFactory.newRecordInstance(Resource.class);
     boolean memorySet = false;
     boolean cpuVcoresSet = false;

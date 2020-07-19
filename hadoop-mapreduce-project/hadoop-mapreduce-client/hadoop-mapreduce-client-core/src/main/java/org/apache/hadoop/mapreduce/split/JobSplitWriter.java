@@ -71,7 +71,17 @@ public class JobSplitWriter {
     T[] array = (T[]) splits.toArray(new InputSplit[splits.size()]);
     createSplitFiles(jobSubmitDir, conf, fs, array);
   }
-  
+
+  /**
+   * 创建分片文件
+   * @param jobSubmitDir
+   * @param conf
+   * @param fs
+   * @param splits
+   * @param <T>
+   * @throws IOException
+   * @throws InterruptedException
+   */
   public static <T extends InputSplit> void createSplitFiles(Path jobSubmitDir, 
       Configuration conf, FileSystem fs, T[] splits) 
   throws IOException, InterruptedException {

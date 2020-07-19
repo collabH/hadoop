@@ -95,6 +95,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *
+ * 用户和组信息的Hadoop。 该类包装围绕一个主题JAAS，并提供方法来确定用户的用户名和组。
+ * 它同时支持Windows，Unix和Kerberos登录模块
  * User and group information for Hadoop.
  * This class wraps around a JAAS Subject and provides methods to determine the
  * user's username and groups. It supports both the Windows, Unix and Kerberos 
@@ -1816,6 +1819,7 @@ public class UserGroupInformation {
   }
 
   /**
+   * 以用户身份运行给定的操作。
    * Run the given action as the user.
    * @param <T> the return type of the run method
    * @param action the method to execute

@@ -29,6 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
+ * Writable实例的包装器
  * A wrapper for Writable instances.
  * <p>
  * When two sequence files, which have same Key type but different Value

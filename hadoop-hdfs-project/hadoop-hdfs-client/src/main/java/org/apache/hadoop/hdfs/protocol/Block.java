@@ -33,6 +33,7 @@ import org.apache.hadoop.io.WritableFactories;
 import org.apache.hadoop.io.WritableFactory;
 
 /**
+ * 一个块是hadoop文件系统原始存储，通过block id来作为唯一标识。
  * A Block is a Hadoop FS primitive, identified by its block ID (a long). A
  * block also has an accompanying generation stamp. A generation stamp is a
  * monotonically increasing 8-byte number for each block that is maintained
@@ -49,6 +50,7 @@ public class Block implements Writable, Comparable<Block> {
   public static final String BLOCK_FILE_PREFIX = "blk_";
   public static final String METADATA_EXTENSION = ".meta";
   static {                                      // register a ctor
+    //注册一个一个序列化工厂
     WritableFactories.setFactory(Block.class, new WritableFactory() {
       @Override
       public Writable newInstance() { return new Block(); }

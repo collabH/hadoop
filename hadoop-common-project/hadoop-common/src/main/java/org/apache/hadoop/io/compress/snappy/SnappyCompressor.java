@@ -29,23 +29,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * snappy压缩器
  * A {@link Compressor} based on the snappy compression algorithm.
  * http://code.google.com/p/snappy/
  */
 public class SnappyCompressor implements Compressor {
   private static final Logger LOG =
       LoggerFactory.getLogger(SnappyCompressor.class.getName());
+  //默认直接缓存区大小
   private static final int DEFAULT_DIRECT_BUFFER_SIZE = 64 * 1024;
 
+  //直接缓冲区大小
   private int directBufferSize;
+  // 压缩直接缓存区
   private Buffer compressedDirectBuf = null;
+  //为压缩直接缓存区长度
   private int uncompressedDirectBufLen;
   private Buffer uncompressedDirectBuf = null;
+  //保存setInput()
   private byte[] userBuf = null;
   private int userBufOff = 0, userBufLen = 0;
+  //是否还有为处理的数据标志已经是否进行压缩读取标志
   private boolean finish, finished;
 
+  //数据读取计数器
   private long bytesRead = 0L;
+  //数据压缩写入计数器
   private long bytesWritten = 0L;
 
   private static boolean nativeSnappyLoaded = false;
@@ -103,10 +112,13 @@ public class SnappyCompressor implements Compressor {
     if (off < 0 || len < 0 || off > b.length - len) {
       throw new ArrayIndexOutOfBoundsException();
     }
+    //设置是否存在可以读取的压缩数据
     finished = false;
 
+    //如果田间数据大于uncompressedDirectBuf剩余容量
     if (len > uncompressedDirectBuf.remaining()) {
       // save data; now !needsInput
+      //将数据计入userBuf、userBufOff、userBufLen中
       this.userBuf = b;
       this.userBufOff = off;
       this.userBufLen = len;
@@ -155,6 +167,7 @@ public class SnappyCompressor implements Compressor {
    */
   @Override
   public boolean needsInput() {
+    //输出缓冲区有未读取的数据，输入缓冲区没有空间，已经压缩器已经借用外部缓冲区，这是需要通过compress取走已经压缩的数据
     return !(compressedDirectBuf.remaining() > 0
         || uncompressedDirectBuf.remaining() == 0 || userBufLen > 0);
   }
@@ -177,6 +190,7 @@ public class SnappyCompressor implements Compressor {
    */
   @Override
   public boolean finished() {
+    //如果finsh为true并且finished为ture并且输出缓冲区没有数据是finished为true
     // Check if all uncompressed data has been consumed
     return (finish && finished && compressedDirectBuf.remaining() == 0);
   }
@@ -202,30 +216,37 @@ public class SnappyCompressor implements Compressor {
       throw new ArrayIndexOutOfBoundsException();
     }
 
+    //校验输出缓冲区容量
     // Check if there is compressed data
     int n = compressedDirectBuf.remaining();
+    //输出缓冲区还有数据
     if (n > 0) {
       n = Math.min(n, len);
       ((ByteBuffer) compressedDirectBuf).get(b, off, n);
       bytesWritten += n;
       return n;
     }
-
+    //初始化输出缓冲区
     // Re-initialize the snappy's output direct-buffer
     compressedDirectBuf.clear();
     compressedDirectBuf.limit(0);
+    //如果输入缓冲区没有数据
     if (0 == uncompressedDirectBuf.position()) {
       // No compressed data, so we should have !needsInput or !finished
+      // 处理写入userBuf中的数据
       setInputFromSavedData();
+      //二次判断
       if (0 == uncompressedDirectBuf.position()) {
         // Called without data; write nothing
+        // finished为true没有需要写入数据
         finished = true;
         return 0;
       }
     }
 
-    // Compress data
+    // Compress data 压缩数据
     n = compressBytesDirect();
+    //放入压缩输出缓冲区
     compressedDirectBuf.limit(n);
     uncompressedDirectBuf.clear(); // snappy consumes all buffer input
 

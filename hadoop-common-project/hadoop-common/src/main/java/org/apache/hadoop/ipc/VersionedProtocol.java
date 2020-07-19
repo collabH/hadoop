@@ -21,15 +21,18 @@ package org.apache.hadoop.ipc;
 import java.io.IOException;
 
 /**
+ * 所有协议的超类为了使用Hadoop RPC
  * Superclass of all protocols that use Hadoop RPC.
+ * 该接口的子类还应该具有静态最终长版本ID字段。
  * Subclasses of this interface are also supposed to have
  * a static final long versionID field.
  */
 public interface VersionedProtocol {
   
   /**
+   * 返回协议的版本
    * Return protocol version corresponding to protocol interface.
-   * @param protocol The classname of the protocol interface
+   * @param protocol The classname of the protocol interface 协议接口的全路径
    * @param clientVersion The version of the protocol that the client speaks
    * @return the version that the server will speak
    * @throws IOException if any IO error occurs
@@ -38,6 +41,7 @@ public interface VersionedProtocol {
                                  long clientVersion) throws IOException;
 
   /**
+   * 返回协议的版本
    * Return protocol version corresponding to protocol interface.
    * @param protocol The classname of the protocol interface
    * @param clientVersion The version of the protocol that the client speaks

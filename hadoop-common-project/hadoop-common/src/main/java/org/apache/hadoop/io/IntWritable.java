@@ -30,6 +30,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 public class IntWritable implements WritableComparable<IntWritable> {
+  //实际存储数据
   private int value;
 
   public IntWritable() {}
@@ -42,6 +43,7 @@ public class IntWritable implements WritableComparable<IntWritable> {
   /** Return the value of this IntWritable. */
   public int get() { return value; }
 
+  //基于Writable的序列化机制
   @Override
   public void readFields(DataInput in) throws IOException {
     value = in.readInt();
@@ -88,6 +90,7 @@ public class IntWritable implements WritableComparable<IntWritable> {
     @Override
     public int compare(byte[] b1, int s1, int l1,
                        byte[] b2, int s2, int l2) {
+      //通用的二进制比较方法基于RowCompartor
       int thisValue = readInt(b1, s1);
       int thatValue = readInt(b2, s2);
       return (thisValue<thatValue ? -1 : (thisValue==thatValue ? 0 : 1));
@@ -95,6 +98,7 @@ public class IntWritable implements WritableComparable<IntWritable> {
   }
 
   static {                                        // register this comparator
+    //注册比较器
     WritableComparator.define(IntWritable.class, new Comparator());
   }
 }

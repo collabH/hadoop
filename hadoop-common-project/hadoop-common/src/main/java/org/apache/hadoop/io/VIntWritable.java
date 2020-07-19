@@ -25,7 +25,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 
 /** A WritableComparable for integer values stored in variable-length format.
  * Such values take between one and five bytes.  Smaller values take fewer bytes.
- * 
+ * 可变int类型
  * @see org.apache.hadoop.io.WritableUtils#readVInt(DataInput)
  */
 @InterfaceAudience.Public

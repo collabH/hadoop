@@ -39,8 +39,11 @@ import org.apache.hadoop.thirdparty.protobuf.Message;
 @InterfaceStability.Stable
 public class ObjectWritable implements Writable, Configurable {
 
+  //运行时类
   private Class declaredClass;
+  //对象实例
   private Object instance;
+  //hadoop配置
   private Configuration conf;
 
   public ObjectWritable() {}

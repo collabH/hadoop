@@ -25,6 +25,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.io.serializer.DeserializerComparator;
 
 /**
+ * Hadoop提供的一种高效的比较接口
  * <p>
  * A {@link Comparator} that operates directly on byte representations of
  * objects.
@@ -37,6 +38,7 @@ import org.apache.hadoop.io.serializer.DeserializerComparator;
 public interface RawComparator<T> extends Comparator<T> {
 
   /**
+   * 在二进制中比较两个对象
    * Compare two objects in binary.
    * b1[s1:l1] is the first object, and b2[s2:l2] is the second object.
    * 

@@ -130,6 +130,7 @@ import org.apache.hadoop.thirdparty.protobuf.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//一个ipc服务抽象
 /** An abstract IPC service.  IPC calls take a single {@link Writable} as a
  * parameter, and return a {@link Writable} as their value.  A service runs on
  * a port and is defined by a parameter class and a value class.
