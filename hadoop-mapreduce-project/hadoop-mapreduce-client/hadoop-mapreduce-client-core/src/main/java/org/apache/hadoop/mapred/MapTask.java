@@ -390,6 +390,7 @@ public class MapTask extends Task {
     MapOutputCollector.Context context =
       new MapOutputCollector.Context(this, job, reporter);
 
+    // 从Job配置中拿到指定的collector，默认类型MapOutputBuffer
     Class<?>[] collectorClasses = job.getClasses(
       JobContext.MAP_OUTPUT_COLLECTOR_CLASS_ATTR, MapOutputBuffer.class);
     int remainingCollectors = collectorClasses.length;
@@ -694,9 +695,15 @@ public class MapTask extends Task {
       return bytesWritten;
     }
   }
-  
+
+  /**
+   * 新的环形缓冲区，用于存储MapTask输出的数据
+   * @param <K>
+   * @param <V>
+   */
   private class NewOutputCollector<K,V>
     extends org.apache.hadoop.mapreduce.RecordWriter<K,V> {
+    // 环形缓冲区
     private final MapOutputCollector<K,V> collector;
     private final org.apache.hadoop.mapreduce.Partitioner<K,V> partitioner;
     private final int partitions;
@@ -707,6 +714,7 @@ public class MapTask extends Task {
                        TaskUmbilicalProtocol umbilical,
                        TaskReporter reporter
                        ) throws IOException, ClassNotFoundException {
+      // 创建一个排序搜集器
       collector = createSortingCollector(job, reporter);
       partitions = jobContext.getNumReduceTasks();
       if (partitions > 1) {
@@ -741,6 +749,9 @@ public class MapTask extends Task {
   }
 
   @SuppressWarnings("unchecked")
+  /**
+   * 运行MapTask
+   */
   private <INKEY,INVALUE,OUTKEY,OUTVALUE>
   void runNewMapper(final JobConf job,
                     final TaskSplitIndex splitIndex,
@@ -883,6 +894,11 @@ public class MapTask extends Task {
     }
   }
 
+  /**
+   * 默认的环形缓冲区
+   * @param <K>
+   * @param <V>
+   */
   @InterfaceAudience.LimitedPrivate({"MapReduce"})
   @InterfaceStability.Unstable
   public static class MapOutputBuffer<K extends Object, V extends Object>
@@ -903,12 +919,12 @@ public class MapTask extends Task {
     private CompressionCodec codec;
 
     // k/v accounting
-    private IntBuffer kvmeta; // metadata overlay on backing store
-    int kvstart;            // marks origin of spill metadata
-    int kvend;              // marks end of spill metadata
-    int kvindex;            // marks end of fully serialized records
+    private IntBuffer kvmeta; // metadata overlay on backing store 后备存储上的元数据覆盖
+    int kvstart;            // marks origin of spill metadata 标记溢出元数据开始
+    int kvend;              // marks end of spill metadata  标记溢出元数据结束
+    int kvindex;            // marks end of fully serialized records 标记完全序列化记录的结尾
 
-    int equator;            // marks origin of meta/serialization
+    int equator;            // marks origin of meta/serialization 标记元/序列化的起源
     int bufstart;           // marks beginning of spill
     int bufend;             // marks beginning of collectable
     int bufmark;            // marks end of record
@@ -1471,6 +1487,12 @@ public class MapTask extends Task {
       }
     }
 
+    /**
+     * 数据刷入磁盘
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
     public void flush() throws IOException, ClassNotFoundException,
            InterruptedException {
       LOG.info("Starting flush of map output");
@@ -1602,6 +1624,12 @@ public class MapTask extends Task {
       spillReady.signal();
     }
 
+    /**
+     * 排序和溢写磁盘
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
     private void sortAndSpill() throws IOException, ClassNotFoundException,
                                        InterruptedException {
       //approximate the length of the output file to be the length of the
@@ -1622,6 +1650,7 @@ public class MapTask extends Task {
           (kvstart >= kvend
           ? kvstart
           : kvmeta.capacity() + kvstart) / NMETA;
+        // 索引排序
         sorter.sort(MapOutputBuffer.this, mstart, mend, reporter);
         int spindex = mstart;
         final IndexRecord rec = new IndexRecord();
@@ -1633,6 +1662,7 @@ public class MapTask extends Task {
             partitionOut = CryptoUtils.wrapIfNecessary(job, out, false);
             writer = new Writer<K, V>(job, partitionOut, keyClass, valClass, codec,
                                       spilledRecordsCounter);
+            // 是否需要combiner操作
             if (combinerRunner == null) {
               // spill directly
               DataInputBuffer key = new DataInputBuffer();
@@ -1656,9 +1686,11 @@ public class MapTask extends Task {
               // Note: we would like to avoid the combiner if we've fewer
               // than some threshold of records for a partition
               if (spstart != spindex) {
+                // 放入combineCollector
                 combineCollector.setWriter(writer);
                 RawKeyValueIterator kvIter =
                   new MRResultIterator(spstart, spindex);
+                // 运行combine操作
                 combinerRunner.combine(kvIter, combineCollector);
               }
             }

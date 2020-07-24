@@ -644,18 +644,28 @@ abstract public class Task implements Writable, Configurable {
     return status;
   }
 
+  /**
+   * task执行上报器
+   */
   @InterfaceAudience.LimitedPrivate({"MapReduce"})
   @InterfaceStability.Unstable
   public class TaskReporter 
       extends org.apache.hadoop.mapreduce.StatusReporter
       implements Runnable, Reporter {
     private TaskUmbilicalProtocol umbilical;
+    // 输入分片
     private InputSplit split = null;
+    // 任务执行过程
     private Progress taskProgress;
+    // ping线程
     private Thread pingThread = null;
+    // 完成表示
     private boolean done = true;
+    // 锁
     private Object lock = new Object();
+    // 磁盘限制校验
     private volatile String diskLimitCheckStatus = null;
+    // 磁盘限制校验线程
     private Thread diskLimitCheckThread = null;
 
     /**

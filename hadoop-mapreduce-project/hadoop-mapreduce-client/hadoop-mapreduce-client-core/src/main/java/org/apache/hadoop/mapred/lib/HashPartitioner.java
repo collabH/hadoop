@@ -23,7 +23,8 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.mapred.Partitioner;
 import org.apache.hadoop.mapred.JobConf;
 
-/** 
+/**
+ * 默认分区器
  * Partition keys by their {@link Object#hashCode()}. 
  */
 @InterfaceAudience.Public
@@ -35,6 +36,7 @@ public class HashPartitioner<K2, V2> implements Partitioner<K2, V2> {
   /** Use {@link Object#hashCode()} to partition. */
   public int getPartition(K2 key, V2 value,
                           int numReduceTasks) {
+    // 对reduce取模，按照reduce个数分区
     return (key.hashCode() & Integer.MAX_VALUE) % numReduceTasks;
   }
 
